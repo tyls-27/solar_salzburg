@@ -108,8 +108,8 @@ nsg_raw <- st_read("/vsicurl/https://raw.githubusercontent.com/tyls-27/solar_sal
 # download data on plant protection areas ----
 psg_raw <- st_read("/vsicurl/https://raw.githubusercontent.com/tyls-27/solar_salzburg/master/Pflanzenschutzgebiete/Pflanzenschutzgebiete.shp")
 
-# download data on SPA sites (second version - check if same as first) ----
-spa_2_raw <- st_read("/vsicurl/https://raw.githubusercontent.com/tyls-27/solar_salzburg/master/Wild_Europaschutzgebiete_VS_RL/Wild_Europaschutzgebiete_VS_RL.shp")
+# download data on wildlife reserves ----
+wsg_raw <- st_read("/vsicurl/https://raw.githubusercontent.com/tyls-27/solar_salzburg/master/Wild_Europaschutzgebiete_VS_RL/Wild_Europaschutzgebiete_VS_RL.shp")
 
 # download data on municipality populations ----
 pop_raw <- read_csv("https://raw.githubusercontent.com/tyls-27/solar_salzburg/master/Bev_2023_nach_Katastralgemeinden.csv",
@@ -166,13 +166,6 @@ sbg_str_comb <- st_read("/vsicurl/https://raw.githubusercontent.com/tyls-27/sola
 
 # clip to size of Salburg province
 sbg_str_comb <- st_intersection(sbg_str_comb, bundesland) # clip using Salzburg state polygon
-
-# pass our bounding box coordinates into the OverPassQuery (opq) function
-sbg_track_osm <- opq(bbox = osm_bbox) %>%
-  # pipe this into the add_osm_feature data query function to extract our tracks
-  add_osm_feature(key = "highway", value = "track") %>%
-  # pipe this into our osmdata_sf object
-  osmdata_sf()
 
 # download data from OSM on power lines (work out if osm or sbg data is better)----
 # pass our bounding box coordinates into the OverPassQuery (opq) function
@@ -405,7 +398,25 @@ gemeinden <- gem_grenz_raw %>%
 
 # check osm ids ----
 # double check all of the other datasets (no need to leave code) ----
+# combine nature conservation areas into one polygon - check for overaps and then combine - fuse borders
 #### Topography ####
+# calculate aspect from the dsm
+# terra::terrain(dgm, v="aspect", neighbors=8, unit="degrees", filename="daten_zwischenablage/hangrichtung.tif")
+
+# calculate slope from dsm
+# terra::terrain(dgm, v="slope", neighbors=8, unit="degrees", filename="daten_zwischenablage/hangneigung.tif")
+
+hangausrichtung <- rast("daten_zwischenablage/hangausrichtung.tif")
+hangneigung <- rast("daten_zwischenablage/hangneigung.tif")
+
+# load in slope and aspect rasters
+
+#hangausrichtung <- rast("offline_files/hangausrichtung5m/hangausrichtung5m.asc")
+# hangneigung <- rast("offline_files/hangneigung5m/hangneigung5m.asc")
+
+# no crs present - assign CRS based on metadata 
+# crs(hangausrichtung) <- "EPSG: 31258" # (https://service.salzburg.gv.at/ogd/client/showDetail/fbeed257-28bf-44b1-9ab4-eeb80863b79c)
+# crs(hangneigung) <- "EPSG: 31258" # https://service.salzburg.gv.at/ogd/client/showDetail/57c38869-3226-4023-8030-34b5f54e2f0b
 
 
 # see which criteria make sense and download accordingly
