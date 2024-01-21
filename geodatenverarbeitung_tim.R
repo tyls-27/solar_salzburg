@@ -9,6 +9,7 @@ library(sp)
 library(sf)
 library(tidyverse)
 library(osmdata)
+library(janitor)
 
 #### ----------- Data Download and CRS Check and Transformation ----------- ####
 # read in solar potential data ----
@@ -382,23 +383,74 @@ sbg_bahn <- st_intersection(sbg_bahn, bundesland) # clip using Salzburg state po
 
 
 #### ------------------------ Further Data Cleaning ----------------------- ####
-# merge pop_raw and gem_grenz_raw ----
+# clean the column names of all dataframes and spatial data frames ----
+# Get a list of all data frames in the global environment
+df_list <- Filter(is.data.frame, mget(ls()))
+
+# Loop through each data frame, apply clean_names(), and rename the data frame
+for (df_name in names(df_list)) {
+  # Apply clean_names() to the data frame
+  cleaned_df <- clean_names(get(df_name))
+  
+  # Change the name by appending "_clean" and removing "_raw" if present
+  new_name <- gsub("_raw", "", paste0(df_name, "_clean"))
+  
+  # Assign the cleaned data frame with the new name to the global environment
+  assign(new_name, clean_names(get(df_name)))
+  
+  rm(cleaned_df)
+}
+
+# merge together population data with geometry data of muncipality ----
 
 # aggregate Kastralgemeinde population to the Gemeinde (municipal) level 
-pop_clean <- pop_raw %>%
-  filter(Bundesland == "Salzburg") %>%
+pop <- pop_clean %>% 
+  filter(bundesland == "Salzburg") %>%
   select(-c(4,5)) %>%
-  rename(c(GKZ = 2, Bevölkerung = 4)) %>%
-  group_by(Gemeindename, GKZ) %>%
-  summarise(Bevölkerung = sum(Bevölkerung))
+  rename(c(gkz = 2, bevölkerung = 4)) %>%
+  group_by(gemeindename, gkz) %>%
+  summarise(bevölkerung = sum(bevölkerung))
 
 # merge pop_clean and gem_grenz_raw on basis of muncipality name & code
-gemeinden <- gem_grenz_raw %>%
-  left_join(pop_clean, by = c("GEMNR" = "GKZ", "NAME" = "Gemeindename"))
+gemeinden <- gem_grenz_clean %>%
+  left_join(pop_clean, by = c("gemnr" = "gkz", "name" = "gemeindename"))
+
+# merge datasets on protected areas together ----
+
+# merge cleaned datasets using bind_rows 
+pa_comb <- bind_rows(ffh_clean, geschuezte_lt_clean, geschuezte_ng_clean, lsg_clean, 
+                     natura2000_clean, nd_clean, np_clean, nsg_clean, psg_clean, 
+                     ramsar_clean, spa_clean, wsg_clean)
 
 # check osm ids ----
+
+# using osm_id:
+# check if there are any duplicates in data on all developed land-use areas
+any(duplicated(sbg_alle_geb_clean$osm_id)) # false
+
+# check if there are any duplicates in data on railway lines
+any(duplicated(sbg_bahn_clean$osm_id)) # false
+
+# check if there are any duplicates in data on enterprise lines
+any(duplicated(sbg_betriebe_clean$osm_id)) # false
+
+# check if there are any duplicates in data on power lines
+any(duplicated(sbg_sl_clean$osm_id)) # false
+
+# check if there are any duplicates in data on roads
+any(duplicated(sbg_str_comb_clean$osm_id)) # false
+
+# check if there are any duplicates in data on residential areas
+any(duplicated(sbg_wohngebiete_clean$osm_id)) # false
+
 # double check all of the other datasets (no need to leave code) ----
 # combine nature conservation areas into one polygon - check for overaps and then combine - fuse borders
+
+#### --------------------------- Protected Areas -------------------------- #### 
+# combine all polygons together
+
+# check for overaps and then combine - fuse borders (here don't need buffer)
+
 #### Topography ####
 # calculate aspect from the dsm
 # terra::terrain(dgm, v="aspect", neighbors=8, unit="degrees", filename="daten_zwischenablage/hangrichtung.tif")
@@ -418,6 +470,7 @@ hangneigung <- rast("daten_zwischenablage/hangneigung.tif")
 # crs(hangausrichtung) <- "EPSG: 31258" # (https://service.salzburg.gv.at/ogd/client/showDetail/fbeed257-28bf-44b1-9ab4-eeb80863b79c)
 # crs(hangneigung) <- "EPSG: 31258" # https://service.salzburg.gv.at/ogd/client/showDetail/57c38869-3226-4023-8030-34b5f54e2f0b
 
+#### --------------------------- Map and Graphs --------------------------- ####
 
 # see which criteria make sense and download accordingly
 # save these datasets offline as they are large (or write the shp at least onto github if fits )
