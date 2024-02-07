@@ -1,6 +1,6 @@
 # Solarenergie- und -anlagenpotenzial Salzburgs - eine Analyse und tentative Machbarkeitsstudie
 # Date: January 2024
-# Author: Timothy Sung S
+# Author: Timothy Sung
 
 library(tmap)
 library(raster)
@@ -159,9 +159,9 @@ for (df_name in names(df_list)) {
 gemeinden <- pop_clean %>% 
   filter(bundesland == "Salzburg") %>%
   select(-c(4,5)) %>%
-  rename(c(gkz = 2, bevÃ¶lkerung = 4)) %>%
+  rename(c(gkz = 2, bevölkerung = 4)) %>%
   group_by(gemeindename, gkz) %>%
-  summarise(bevÃ¶lkerung = sum(bevÃ¶lkerung)) %>%
+  summarise(bevölkerung = sum(bevölkerung)) %>%
   # merge with gem_grenz_raw on basis of muncipality name & code
   right_join(gem_grenz_clean, by = c("gkz" = "gemnr", "gemeindename" = "name")) %>%
   st_as_sf() # reasign as sf object
@@ -521,13 +521,13 @@ st_write(gemeinden_solar, "daten_zwischenablage/gemeinden_solar.shp")
 
 # wo darf man in Salzburg keine Solaranlagen bauen
 
-# Liftanlagen nicht berÃ¼cksichtigt - Nutzungskonflikt
+# Liftanlagen nicht berücksichtigt - Nutzungskonflikt
 # mit Schifahren
 
-# Strassen und GebÃ¤uden mit Overpass API - schauen ob
+# Strassen und Gebäuden mit Overpass API - schauen ob
 # die Daten von den GLM geeignet sind oder nicht
 
 # DLM_2000_BAUTEN_20230912 - stromleitungen
 
 # ob es politisch durchsetzbar ist, koennte eine folgende Stuide sein
-# decision support system - wo werden die grÃ¶ÃŸte Anzahl von Einwohnern betroffen
+# decision support system - wo werden die größte Anzahl von Einwohnern betroffen
