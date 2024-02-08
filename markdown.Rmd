@@ -1,7 +1,24 @@
-# Solarenergie- und -anlagenpotenzial Salzburgs - eine Analyse und tentative Machbarkeitsstudie
-# Date: January 2024
-# Author: Timothy Sung
+---
+title: "solarpotenzial_salzburg"
+author: "Timothy Sung"
+date: "`r Sys.Date()`"
+output: html_document
+---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(message=FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(eval = FALSE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r load libraries}
 library(tmap)
 library(raster)
 library(terra)
@@ -16,26 +33,31 @@ library(cluster)
 library(readr)
 library(factoextra)
 library(stringr)
+```
 
+## Dateneinlesen
 
+You can also embed plots, for example:
+
+```{r, eval = TRUE}
 # set working directory
-# setwd("~/Documents")
+setwd("~/GDV")
+```
 
+```{r}
 #### ----------- Data Download and CRS Check and Transformation ----------- ####
 # read in solar potential data ----
-
 solar_raw <- rast("offline_files/Solarpot/solarpot_31258.tif")
+```
 
-#solar_raw@crs
-#hist(solar_raw, main="Distribution of elevation values", 
-#     col= "purple", 
-#     maxpixels=22000000)
-
-#plot(solar_raw)
-
-# download data on municipality borders and create state border polygon  ----
+```{r}
+# download data on municipality borders and populations, and create state border polygon  ----
 # download raw data on municipality borders 
 gem_grenz_raw <- st_read("/vsicurl/https://raw.githubusercontent.com/tyls-27/solar_salzburg/master/ESRI_SHAPE/Gemeindegrenzen.shp")
+
+# download data on municipality populations ----
+pop_raw <- read_csv("https://raw.githubusercontent.com/tyls-27/solar_salzburg/master/Bev_2023_nach_Katastralgemeinden.csv",
+                    skip = 1) # skip first row so that columns names are the headers
 
 # create a polygon with the boundaries of Sazlburg state
 bundesland <- gem_grenz_raw %>%
@@ -43,13 +65,44 @@ bundesland <- gem_grenz_raw %>%
   group_by(merge_id) %>%
   summarise(geometry = sf::st_union(geometry)) %>%
   ungroup()
+```
 
+```{r}
+# merge together gemeinde data with Landtagswahl data from 2023
+
+# clean ltw_raw
+ltw <- ltw_clean %>%
+  rename(gemnr = 1, name = 2, ÖVP = 9, SPÖ = 11, FPÖ = 13, GRÜNE = 15, 
+         NEOS = 17, KPÖ = 19, WIRS = 21, MFG = 23) %>% # rename rows
+  filter(!row_number() %in% c(1:17, 120:nrow(b))) %>% # remove rows which don't contain municipality level data
+  dplyr::select(-c(3:8, 10, 12, 14, 16, 18, 20, 22, 24:ncol(b))) %>% # remove columns that contain percentage data, turnout values and those that contain no data
+  mutate_at(c(3:10), ~str_replace_all(., "\\.", "")) %>% # remove all the . in columns containing vote data
+  mutate_at(c(3:10), as.numeric) %>% # set columns containing vote data to numeric
+  mutate_at(1, as.double) %>% # set to double to allow for joining with gemeinden later
+  mutate(total_stimmen = rowSums(across(ÖVP:MFG))) %>% # sum up the total number of votes for each municipality
+  mutate(ÖVP_prozent = ÖVP/total_stimmen*100, 
+         SPÖ_prozent = SPÖ/total_stimmen*100,
+         FPÖ_prozent = FPÖ/total_stimmen*100, 
+         GRÜNE_prozent = GRÜNE/total_stimmen*100,
+         NEOS_prozent = NEOS/total_stimmen*100,
+         KPÖ_prozent = KPÖ/total_stimmen*100, 
+         WIRS_prozent = WIRS/total_stimmen*100,
+         MFG_prozent = MFG/total_stimmen*100, .after = MFG) # calculate percentages of votes for each party in each municipality
+
+# join ltw with gemeinden
+
+gemeinden_ltw <- gemeinden %>%
+  left_join(ltw, by = c("gkz" = "gemnr")) %>% # join gemeinden with ltw based on the Gemeinde Nummer
+  dplyr::select(c(1:7), c(9:26), 8, -name) # reorder columns so geometry is last and delete names as this data is duplicated
+```
+
+```{r}
 # read in data on the Landtagswahl 2023 ----
-
 ltw_raw <- read_csv2("https://raw.githubusercontent.com/tyls-27/solar_salzburg/master//LTW-2023.csv") #only first page of orignal data saved as csv
 
+```
 
-
+```{r}
 # read in data on land cover, combine layers and amend CRS ----
 lc_a_raw <- rast("offline_files/land_cover/ESA_WorldCover_10m_2021_v200_N45E012_Map.tif")
 lc_b_raw <- rast("offline_files/land_cover/ESA_WorldCover_10m_2021_v200_N48E012_Map.tif")
@@ -67,35 +120,29 @@ lc_comb_sbg <- terra::mask(lc_comb, bundesland_4326) # mask lc data to Salzburg
 
 # re-project lc_comb_sbg to working CRS
 lc_sbg <- project(lc_comb_sbg, "EPSG: 31258")
+```
 
+```{r, include = FALSE}
 # write out raster to save time on processing
 writeRaster(lc_sbg, "daten_zwischenablage/lc_sbg.tif") # write out raster
+```
 
+```{r}
 # read in data on zoning ----
 fl_wid_raw <- st_read("offline_files/Flaechenwidmung/Flaechenwidmung.shp")
+```
 
-# read in dsm ----
+```{r}
+# read in dsm (topographical data) ----
 dgm <- rast("offline_files/dgm5m/dgm5m.asc")
 
 # convert to working crs of EPSG: 31258 (if not already in it)
 dgm <- project(dgm, "epsg:31258")
 
 writeRaster(dgm, "daten_zwischenablage/dgm.tif") # write out raster
+```
 
-
-# download data on electricity lines ----
-strom_leitungen_raw <- st_read("/vsicurl/https://raw.githubusercontent.com/tyls-27/solar_salzburg/master/DLM_2000_BAUTEN_20230912/BAU_2700_STROMLEITUNG_L.shp")
-
-# check CRS
-st_crs(strom_leitungen_raw) # CRS is 32155
-
-# transform CRS
-strom_leitungen_31258<- st_transform(strom_leitungen_raw, "EPSG: 31258")
-
-# clip extent of strom_leitungen_31258 to Salzburg state
-
-strom_leitungen_sbg <- st_intersection(strom_leitungen_31258, bundesland) # clip using Salzburg state polygon
-
+```{r}
 # download data on FFH sites ----
 ffh_raw <- st_read("/vsicurl/https://raw.githubusercontent.com/tyls-27/solar_salzburg/master/Europaschutzgebiete_FFH_RL/Europaschutzgebiete_FFH_RL.shp")
 
@@ -132,13 +179,12 @@ psg_raw <- st_read("/vsicurl/https://raw.githubusercontent.com/tyls-27/solar_sal
 # download data on wildlife reserves ----
 wsg_raw <- st_read("/vsicurl/https://raw.githubusercontent.com/tyls-27/solar_salzburg/master/Wild_Europaschutzgebiete_VS_RL/Wild_Europaschutzgebiete_VS_RL.shp")
 
-# download data on municipality populations ----
-pop_raw <- read_csv("https://raw.githubusercontent.com/tyls-27/solar_salzburg/master/Bev_2023_nach_Katastralgemeinden.csv",
-                    skip = 1) # skip first row so that columns names are the headers
+```
 
-
+## Weitere Datenbereinigung
+```{r}
 #### ------------------------ Further Data Cleaning ----------------------- ####
-# clean the column names of all dataframes and spatial data frames ----
+# clean the column names of all data frames and spatial data frames ----
 # Get a list of all data frames in the global environment
 df_list <- Filter(is.data.frame, mget(ls()))
 
@@ -155,56 +201,34 @@ for (df_name in names(df_list)) {
   
   rm(cleaned_df)
 }
+```
 
+```{r}
 # merge together population data with geometry data of muncipality ----
 
 # aggregate Kastralgemeinde population to the Gemeinde (municipal) level 
 gemeinden <- pop_clean %>% 
   filter(bundesland == "Salzburg") %>%
-  dplyr::select(-c(4,5)) %>%
-  rename(c(gkz = 2, bevölkerung = 4)) %>%
+  select(-c(4,5)) %>%
+  rename(c(gkz = 2, bev?lkerung = 4)) %>%
   group_by(gemeindename, gkz) %>%
-  summarise(bevölkerung = sum(bevölkerung)) %>%
+  summarise(bev?lkerung = sum(bev?lkerung)) %>%
   # merge with gem_grenz_raw on basis of muncipality name & code
   right_join(gem_grenz_clean, by = c("gkz" = "gemnr", "gemeindename" = "name")) %>%
   st_as_sf() # reasign as sf object
 
-# merge together gemeinde data with Landtagswahl data from 2023
+```
 
-# clean ltw_raw
-ltw <- ltw_clean %>%
-  rename(gemnr = 1, name = 2, ÖVP = 9, SPÖ = 11, FPÖ = 13, GRÜNE = 15, 
-         NEOS = 17, KPÖ = 19, WIRS = 21, MFG = 23) %>% # rename rows
-  filter(!row_number() %in% c(1:17, 120:nrow(b))) %>% # remove rows which don't contain municipality level data
-  dplyr::select(-c(3:8, 10, 12, 14, 16, 18, 20, 22, 24:ncol(b))) %>% # remove columns that contain percentage data, turnout values and those that contain no data
-  mutate_at(c(3:10), ~str_replace_all(., "\\.", "")) %>% # remove all the . in columns containing vote data
-  mutate_at(c(3:10), as.numeric) %>% # set columns containing vote data to numeric
-  mutate_at(1, as.double) %>% # set to double to allow for joining with gemeinden later
-  mutate(total_stimmen = rowSums(across(ÖVP:MFG))) %>% # sum up the total number of votes for each municipality
-  mutate(ÖVP_prozent = ÖVP/total_stimmen*100, 
-         SPÖ_prozent = SPÖ/total_stimmen*100,
-         FPÖ_prozent = FPÖ/total_stimmen*100, 
-         GRÜNE_prozent = GRÜNE/total_stimmen*100,
-         NEOS_prozent = NEOS/total_stimmen*100,
-         KPÖ_prozent = KPÖ/total_stimmen*100, 
-         WIRS_prozent = WIRS/total_stimmen*100,
-         MFG_prozent = MFG/total_stimmen*100, .after = MFG) # calculate percentages of votes for each party in each municipality
-
-# join ltw with gemeinden
-
-gemeinden_ltw <- gemeinden %>%
-  left_join(ltw, by = c("gkz" = "gemnr")) %>% # join gemeinden with ltw based on the Gemeinde Nummer
-  dplyr::select(c(1:7), c(9:26), 8, -name) # reorder columns so geometry is last and delete names as this data is duplicated
-  
-
+```{r}
 # merge datasets on protected areas together ----
 
 # merge cleaned datasets using bind_rows 
 pa_all <- bind_rows(ffh_clean, geschuezte_lt_clean, geschuezte_ng_clean, 
                     lsg_clean, natura2000_clean, nd_clean, np_clean, nsg_clean, 
                     psg_clean, ramsar_clean, spa_clean, wsg_clean)
+```
 
-
+```{r}
 # extract water, roads, train tracks, solar parks, populated areas, ---- 
 # enterprise areas, and residential areas from fl_wid_clean
 
@@ -268,7 +292,12 @@ fl_wid_solar <- fl_wid_clean %>%
 fl_wid_kat_alle <- bind_rows(list(fl_wid_bahn, fl_wid_betriebe, fl_wid_bewohnt, 
                                   fl_wid_gewaesser, fl_wid_str, 
                                   fl_wid_wohngebiete, fl_wid_solar))
+```
 
+## Puffer Erstellen, Festellung von ausgeschlossenen Gebieten
+
+### Straßen
+```{r}
 #### -------------------------------- Roads ------------------------------- ####
 # create buffer around roads
 str_buffer <- fl_wid_kat_alle %>%
@@ -277,13 +306,18 @@ str_buffer <- fl_wid_kat_alle %>%
   st_union() %>% # combine all road geometries into one polygon geometry
   st_buffer(500)%>% # 500 m buffer around geometries
   st_intersection(bundesland_clean) # clip to size of state
+```
 
+```{r, include=FALSE}
 # write str_buffer to a shapefile
 st_write(str_buffer, "daten_zwischenablage/str_buffer.shp", append = F)
 
 # read in str_buffer
 str_buffer <- st_read("/vsicurl/https://raw.githubusercontent.com/tyls-27/solar_salzburg/master/daten_zwischenablage/str_buffer.shp")
+```
 
+### Bewohnte Gebiete
+```{r}
 #### --------------------------- Populated Areas -------------------------- ####
 # create buffer around populated areas
 # combine all populated area geometries into one polygon geometry
@@ -294,12 +328,19 @@ bewohnt_buffer <- fl_wid_kat_alle %>%
   st_buffer(2500)%>% # 2500 m buffer around geometries
   st_intersection(bundesland_clean) # clip to size of state
 
+```
+
+```{r, include = FALSE}
+
 # write bewohnt_buffer to a shapefile
 st_write(bewohnt_buffer, "daten_zwischenablage/bewohnt_buffer.shp", append = F)
 
 # read in bewohnt_buffer
 bewohnt_buffer <- st_read("/vsicurl/https://raw.githubusercontent.com/tyls-27/solar_salzburg/master/daten_zwischenablage/bewohnt_buffer.shp")
+```
 
+### Wohngebiete
+```{r}
 #### -------------------------- Residential Areas ------------------------- ####
 # create buffer around residential areas
 # combine all residential area geometries into one polygon geometry
@@ -309,14 +350,19 @@ wohngebiete_buffer <- fl_wid_kat_alle %>%
   st_union() %>% # combine all residential area geometries into one polygon geometry
   st_buffer(500)%>% # 500 m buffer around geometries
   st_intersection(bundesland_clean) # clip to size of state
+```
 
+```{r, include = FALSE}
 # write wohngebiete_buffer to a shapefile
 st_write(wohngebiete_buffer, "daten_zwischenablage/wohngebiete_buffer.shp", 
          append = F)
 
 # read in wohngebiete_buffer
 wohngebiete_buffer <- st_read("/vsicurl/https://raw.githubusercontent.com/tyls-27/solar_salzburg/master/daten_zwischenablage/wohngebiete_buffer.shp")
+```
 
+### Betriebsgebiete
+```{r}
 #### --------------------- Enterprise/Indsutrial Areas -------------------- ####
 # create buffer around enterprise/industrial areas
 # combine all enterprise/industrial area geometries into one polygon geometry
@@ -326,14 +372,19 @@ betriebe_buffer <- fl_wid_kat_alle %>%
   st_union() %>% # combine all enterprise/industral area geometries into one polygon geometry
   st_buffer(3500)%>% # 3500 m buffer around geometries
   st_intersection(bundesland_clean) # clip to size of state
+```
 
+```{r, include = FALSE}
 # write betriebe_buffer to a shapefile
 st_write(betriebe_buffer, "daten_zwischenablage/betriebe_buffer.shp", 
          append = F)
 
 # read in betriebe_buffer
 betriebe_buffer <- st_read("/vsicurl/https://raw.githubusercontent.com/tyls-27/solar_salzburg/master/daten_zwischenablage/betriebe_buffer.shp")
+```
 
+### Schutzgebiete
+```{r}
 #### --------------------------- Protected Areas -------------------------- #### 
 # combine all polygons together on Protected Area Data
 ## use old dataframe for interactive leaflet map
@@ -355,7 +406,11 @@ if ("geometry" %in% names(pa_all)) {
   pa_comb <- st_union(pa_all$geometry)
   
 } 
+```
 
+### Kombinieren von Vectorpuffern und ???
+
+```{r}
 #### ---------- Combine vector buffers and geometric conditions ----------- ####
 # combine buffers outlining appropriate places - betriebe, bewohnt, str 
 polygon_flaeche_geeignet_rein <- bind_rows(list(betriebe_buffer, bewohnt_buffer, 
@@ -376,11 +431,16 @@ polygon_flaeche_ungeeignet_rein <- fl_wid_kat_alle %>%
 # clip the polygon of suitable areas to polygon_flaeche_ungeeignet_rein
 polygon_flaeche_geeignet <- st_difference(polygon_flaeche_geeignet_rein, 
                                           polygon_flaeche_ungeeignet_rein)
+```
 
+```{r, include = FALSE}
 st_write(polygon_flaeche_geeignet, "daten_zwischenablage/polygon_flaeche_geeignet.shp")
 
 polygon_flaeche_geeignet <- st_read("/vsicurl/https://raw.githubusercontent.com/tyls-27/solar_salzburg/master/daten_zwischenablage/polygon_flaeche_geeignet.shp")
+```
 
+## Auswählen von tauglichen Landbedeckungstypen
+```{r}
 #### ----------------------------- Land Cover ----------------------------- ####
 # 10 - Tree Cover
 # 20 - Shrublands # suitable
@@ -402,17 +462,16 @@ lc_geeignet_fl <- mask(lc_sbg, polygon_flaeche_geeignet)
 # set areas with suitable landcover to 1 and rest to na
 lc_geeignet <- subst(lc_geeignet_fl, c(10, 20, 30, 40, 50, 60, 70, 80, 90, 100), 
                      c(NA, 1, 1, 1, NA, 1, NA, NA, NA, NA), others=NA)
+```
 
+```{r, include=FALSE}
 writeRaster(lc_geeignet, "daten_zwischenablage/lc_geeignet.tif", overwrite = T)
 
 lc_geeignet <- rast("daten_zwischenablage/lc_geeignet.tif")
+```
 
-#### ------------------------------- Height ------------------------------- ####
-
-dgm <- rast("daten_zwischenablage/dgm.tif") 
-dgm_geeignet_fl <- mask(dgm, polygon_flaeche_geeignet)
-dgm_geeignet <- terra::clamp(dgm_geeignet_fl, upper=1500, value=FALSE)
-
+## Topographische Kriterien
+```{r}
 #### ----------------------------- Topography ----------------------------- ####
 
 # load in dgm
@@ -421,9 +480,13 @@ dgm <- rast("daten_zwischenablage/dgm.tif")
 dgm_geeignet_fl <- mask(dgm, polygon_flaeche_geeignet)
 
 dgm_geeignet <- terra::clamp(dgm_geeignet_fl, upper=1500, value=FALSE)
+```
 
+```{r, include = FALSE}
 writeRaster(dgm_geeignet, "daten_zwischenablage/dgm_geeignet.tif")
+```
 
+```{r}
 # calculate aspect from the dsm
 terra::terrain(dgm, v="aspect", neighbors=8, unit="degrees", filename="daten_zwischenablage/hangrichtung.tif", overwrite = T)
 
@@ -432,16 +495,9 @@ terra::terrain(dgm, v="slope", neighbors=8, unit="degrees", filename="daten_zwis
 
 hangausrichtung <- rast("daten_zwischenablage/hangausrichtung.tif")
 hangneigung <- rast("daten_zwischenablage/hangneigung.tif")
+```
 
-# load in slope and aspect rasters
-
-# hangneigung <- rast("offline_files/hangneigung5m/hangneigung5m.asc")
-# hangausrichtung <- rast("offline_files/hangausrichtung5m/hangausrichtung5m.asc")
-
-# no crs present - assign CRS based on metadata 
-# crs(hangausrichtung) <- "EPSG: 31258" # (https://service.salzburg.gv.at/ogd/client/showDetail/fbeed257-28bf-44b1-9ab4-eeb80863b79c)
-# crs(hangneigung) <- "EPSG: 31258" # https://service.salzburg.gv.at/ogd/client/showDetail/57c38869-3226-4023-8030-34b5f54e2f0b
-
+```{r}
 # set areas with suitable gradient to 1 and rest to na
 hangneigung_geeignet_fl <- terra::mask(hangneigung, polygon_flaeche_geeignet)
 
@@ -458,6 +514,12 @@ hangneigung_matr_3_5 <- matrix(hangneigung_zahl_3_5, ncol=3, byrow=TRUE)
 
 hangneigung_geeignet_unter_3_5 <- classify(hangneigung_geeignet_fl, hangneigung_matr_3_5, others=NA)
 
+# clip hangneigung_geeignet_alle with dgm
+hn_dgM_geeignet <- terra::mask(hangneigung_geeignet_alle, dgm)
+```
+
+
+```{r}
 # set areas with suitable aspect to 1 and rest to na
 hangausrichtung_geeignet_fl <- terra::mask(hangausrichtung, polygon_flaeche_geeignet)
 
@@ -467,42 +529,58 @@ hangausrichtung_matr <- matrix(hangausrichtung_zahl, ncol=3, byrow=TRUE)
 
 hangausrichtung_geeignet <- classify(hangausrichtung_geeignet_fl, hangausrichtung_matr, others=NA)
 
-# clip hangneigung_geeignet_alle with dgm
-hn_dgM_geeignet <- terra::mask(hangneigung_geeignet_alle, dgm)
-
-# clip with hangausrichtung
+# clip with combined hangausrichtung and dgm
 hn_dgm_ha_geeignet <- terra::mask(hn_dgM_geeignet, hangausrichtung_geeignet)
+```
 
+```{r, include = FALSE}
 writeRaster(hn_dgm_ha_geeignet, "daten_zwischenablage/hn_dgm_ha_geeignet.tif")
+```
 
+```{r}
 # add in those areas under 3.5 degrees of gradient
 topographie_geeignet <- terra::merge(hn_dgm_ha_geeignet, hangneigung_geeignet_unter_3_5)
+```
 
+```{r, include = FALSE}
 writeRaster(topographie_geeignet, "daten_zwischenablage/topographie_geeignet.tif")
 topographie_geeignet <- rast("daten_zwischenablage/topographie_geeignet.tif")
+```
 
+## Einbeziehung der Solareinstrahlung
+
+```{r}
 #### --------------------------- Solar Radiation -------------------------- ####
 # resample solar_raw to a lower resolution based on dgm (otherwise R does not compute)
 # also to allow for more contiguous areas - with 1x1 resolution - there would likely be very fragemetned areas
-#solar_resample <- resample(solar_raw, dgm)
+solar_resample <- resample(solar_raw, dgm)
 
 # load in saved resampled raster
-#solar_resample <- rast("daten_zwischenablage/solar_resample.tif")
+solar_resample <- rast("daten_zwischenablage/solar_resample.tif")
 
 # set values of areas which do satisfy the 1100 kw/yr requirement to NA
-solar_geeignet <- terra::clamp(solar_raw, lower=1100, value=FALSE)
+solar_geeignet <- terra::clamp(solar_resample, lower=1100, value=FALSE)
+```
 
+```{r, include = FALSE}
 # write 
 writeRaster(solar_geeignet, "daten_zwischenablage/solar_geeignet.tif", overwrite = T)
+```
 
+```{r}
 #### ------------ Combine solar_geeignet & topographie_geeignet ----------- ####
 # mask suitable topographical areas with areas with sufficient solar radiation
 # done as these rasters are on the smae grid and at the same resolution
 top_solar_geeignet <- terra::mask(topographie_geeignet, solar_geeignet)
+```
 
+```{r, include = FALSE}
 # write out raster
 writeRaster(top_solar_geeignet,"daten_zwischenablage/top_solar_geeignet.tif")
+```
 
+## Umwandeln zu SF zum Abbilden
+```{r}
 #### --------------------------- Convert to sf ---------------------------- ####
 
 # Topography-Solar combined Raster
@@ -517,13 +595,19 @@ lc_geeignet_vec <- st_as_sf(lc_geeignet_vec) %>%
 
 # find intersection between solar, topography and lc areas
 flaeche_geeignet <- st_intersection(top_solar_geeignet_vec, lc_geeignet_vec)
+```
 
+```{r, include = FALSE}
 # write out shp
 st_write(flaeche_geeignet, "daten_zwischenablage/flaeche_geeignet.shp")
 
 # read in flaeche_geeignet
 flaeche_geeignet <- st_read("daten_zwischenablage/flaeche_geeignet.shp")
+```
 
+## Cluster Analyse
+
+```{r}
 #### ------------------------- Cluster Analysis -------------------------- ####
 # calculate the amount of solar panel area in each municipality
 # Function to calculate area for each polygon
@@ -532,33 +616,12 @@ gemeinden_solar <- as_tibble(st_intersection(flaeche_geeignet, gemeinden))
 
 #add in an area count column to the tibble (area of each arable poly in intersect layer)
 gemeinden_solar$flaeche_geeignet_in_gemeinde <- st_area(gemeinden_solar$geometry)
+``` 
 
+```{r, include = FALSE}
 # write out shp
 st_write(gemeinden_solar, "daten_zwischenablage/gemeinden_solar.shp")
+```
 
-#### --------------------------- Map and Graphs -------------------------- ####
 
-# mutate area of grassland of each Gemeinde to Gemeinde
-
-# Maps: map on PAs, map on built-up areas, map on land-use, topographical map
-# map of municipalities
-
-# inset map of area
-
-# see which criteria make sense and download accordingly
-# save these datasets offline as they are large (or write the shp at least onto github if fits )
-
-# check overlapping IDs of OSM data
-
-# wo darf man in Salzburg keine Solaranlagen bauen
-
-# Liftanlagen nicht berücksichtigt - Nutzungskonflikt
-# mit Schifahren
-
-# Strassen und Gebüuden mit Overpass API - schauen ob
-# die Daten von den GLM geeignet sind oder nicht
-
-# DLM_2000_BAUTEN_20230912 - stromleitungen
-
-# ob es politisch durchsetzbar ist, koennte eine folgende Stuide sein
-# decision support system - wo werden die größte Anzahl von Einwohnern betroffen
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
