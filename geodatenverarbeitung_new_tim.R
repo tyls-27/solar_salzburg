@@ -69,7 +69,7 @@ lc_comb_sbg <- terra::mask(lc_comb, bundesland_4326) # mask lc data to Salzburg
 lc_sbg <- project(lc_comb_sbg, "EPSG: 31258")
 
 # write out raster to save time on processing
-writeRaster(lc_sbg, "daten_zwischenablage/lc_sbg.tif") # write out raster
+writeRaster(lc_sbg, "daten_zwischenablage/lc_sbg.tif", overwrite=TRUE) # write out raster
 
 # read in data on zoning ----
 fl_wid_raw <- st_read("offline_files/Flaechenwidmung/Flaechenwidmung.shp")
@@ -80,7 +80,7 @@ dgm <- rast("offline_files/dgm5m/dgm5m.asc")
 # convert to working crs of EPSG: 31258 (if not already in it)
 dgm <- project(dgm, "epsg:31258")
 
-writeRaster(dgm, "daten_zwischenablage/dgm.tif") # write out raster
+writeRaster(dgm, "daten_zwischenablage/dgm.tif", overwrite=TRUE) # write out raster
 
 
 # download data on electricity lines ----
@@ -422,7 +422,7 @@ dgm_geeignet_fl <- mask(dgm, polygon_flaeche_geeignet)
 
 dgm_geeignet <- terra::clamp(dgm_geeignet_fl, upper=1500, value=FALSE)
 
-writeRaster(dgm_geeignet, "daten_zwischenablage/dgm_geeignet.tif")
+writeRaster(dgm_geeignet, "daten_zwischenablage/dgm_geeignet.tif", overwrite=TRUE)
 
 # calculate aspect from the dsm
 terra::terrain(dgm, v="aspect", neighbors=8, unit="degrees", filename="daten_zwischenablage/hangrichtung.tif", overwrite = T)
@@ -473,12 +473,12 @@ hn_dgM_geeignet <- terra::mask(hangneigung_geeignet_alle, dgm)
 # clip with hangausrichtung
 hn_dgm_ha_geeignet <- terra::mask(hn_dgM_geeignet, hangausrichtung_geeignet)
 
-writeRaster(hn_dgm_ha_geeignet, "daten_zwischenablage/hn_dgm_ha_geeignet.tif")
+writeRaster(hn_dgm_ha_geeignet, "daten_zwischenablage/hn_dgm_ha_geeignet.tif", overwrite=TRUE)
 
 # add in those areas under 3.5 degrees of gradient
 topographie_geeignet <- terra::merge(hn_dgm_ha_geeignet, hangneigung_geeignet_unter_3_5)
 
-writeRaster(topographie_geeignet, "daten_zwischenablage/topographie_geeignet.tif")
+writeRaster(topographie_geeignet, "daten_zwischenablage/topographie_geeignet.tif", overwrite=TRUE)
 topographie_geeignet <- rast("daten_zwischenablage/topographie_geeignet.tif")
 
 #### --------------------------- Solar Radiation -------------------------- ####
@@ -501,7 +501,7 @@ writeRaster(solar_geeignet, "daten_zwischenablage/solar_geeignet.tif", overwrite
 top_solar_geeignet <- terra::mask(topographie_geeignet, solar_geeignet)
 
 # write out raster
-writeRaster(top_solar_geeignet,"daten_zwischenablage/top_solar_geeignet.tif")
+writeRaster(top_solar_geeignet,"daten_zwischenablage/top_solar_geeignet.tif", overwrite=TRUE)
 
 #### --------------------------- Convert to sf ---------------------------- ####
 
@@ -528,7 +528,7 @@ flaeche_geeignet <- st_read("daten_zwischenablage/flaeche_geeignet.shp")
 # calculate the amount of solar panel area in each municipality
 # Function to calculate area for each polygon
 #run the intersect function, converting the output to a tibble in the process
-gemeinden_solar <- as_tibble(st_intersection(flaeche_geeignet, gemeinden))
+gemeinden_solar <- as_tibble(st_intersection(flaeche_geeignet, gemeinden_ltw))
 
 #add in an area count column to the tibble (area of each arable poly in intersect layer)
 gemeinden_solar$flaeche_geeignet_in_gemeinde <- st_area(gemeinden_solar$geometry)

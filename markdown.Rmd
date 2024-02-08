@@ -67,34 +67,6 @@ bundesland <- gem_grenz_raw %>%
   ungroup()
 ```
 
-```{r}
-# merge together gemeinde data with Landtagswahl data from 2023
-
-# clean ltw_raw
-ltw <- ltw_clean %>%
-  rename(gemnr = 1, name = 2, ÖVP = 9, SPÖ = 11, FPÖ = 13, GRÜNE = 15, 
-         NEOS = 17, KPÖ = 19, WIRS = 21, MFG = 23) %>% # rename rows
-  filter(!row_number() %in% c(1:17, 120:nrow(b))) %>% # remove rows which don't contain municipality level data
-  dplyr::select(-c(3:8, 10, 12, 14, 16, 18, 20, 22, 24:ncol(b))) %>% # remove columns that contain percentage data, turnout values and those that contain no data
-  mutate_at(c(3:10), ~str_replace_all(., "\\.", "")) %>% # remove all the . in columns containing vote data
-  mutate_at(c(3:10), as.numeric) %>% # set columns containing vote data to numeric
-  mutate_at(1, as.double) %>% # set to double to allow for joining with gemeinden later
-  mutate(total_stimmen = rowSums(across(ÖVP:MFG))) %>% # sum up the total number of votes for each municipality
-  mutate(ÖVP_prozent = ÖVP/total_stimmen*100, 
-         SPÖ_prozent = SPÖ/total_stimmen*100,
-         FPÖ_prozent = FPÖ/total_stimmen*100, 
-         GRÜNE_prozent = GRÜNE/total_stimmen*100,
-         NEOS_prozent = NEOS/total_stimmen*100,
-         KPÖ_prozent = KPÖ/total_stimmen*100, 
-         WIRS_prozent = WIRS/total_stimmen*100,
-         MFG_prozent = MFG/total_stimmen*100, .after = MFG) # calculate percentages of votes for each party in each municipality
-
-# join ltw with gemeinden
-
-gemeinden_ltw <- gemeinden %>%
-  left_join(ltw, by = c("gkz" = "gemnr")) %>% # join gemeinden with ltw based on the Gemeinde Nummer
-  dplyr::select(c(1:7), c(9:26), 8, -name) # reorder columns so geometry is last and delete names as this data is duplicated
-```
 
 ```{r}
 # read in data on the Landtagswahl 2023 ----
@@ -124,7 +96,7 @@ lc_sbg <- project(lc_comb_sbg, "EPSG: 31258")
 
 ```{r, include = FALSE}
 # write out raster to save time on processing
-writeRaster(lc_sbg, "daten_zwischenablage/lc_sbg.tif") # write out raster
+writeRaster(lc_sbg, "daten_zwischenablage/lc_sbg.tif", overwrite = TRUE) # write out raster
 ```
 
 ```{r}
@@ -217,6 +189,35 @@ gemeinden <- pop_clean %>%
   right_join(gem_grenz_clean, by = c("gkz" = "gemnr", "gemeindename" = "name")) %>%
   st_as_sf() # reasign as sf object
 
+```
+
+```{r}
+# merge together gemeinde data with Landtagswahl data from 2023
+
+# clean ltw_raw
+ltw <- ltw_clean %>%
+  rename(gemnr = 1, name = 2, ÖVP = 9, SPÖ = 11, FPÖ = 13, GRÜNE = 15, 
+         NEOS = 17, KPÖ = 19, WIRS = 21, MFG = 23) %>% # rename rows
+  filter(!row_number() %in% c(1:17, 120:nrow(b))) %>% # remove rows which don't contain municipality level data
+  dplyr::select(-c(3:8, 10, 12, 14, 16, 18, 20, 22, 24:ncol(b))) %>% # remove columns that contain percentage data, turnout values and those that contain no data
+  mutate_at(c(3:10), ~str_replace_all(., "\\.", "")) %>% # remove all the . in columns containing vote data
+  mutate_at(c(3:10), as.numeric) %>% # set columns containing vote data to numeric
+  mutate_at(1, as.double) %>% # set to double to allow for joining with gemeinden later
+  mutate(total_stimmen = rowSums(across(ÖVP:MFG))) %>% # sum up the total number of votes for each municipality
+  mutate(ÖVP_prozent = ÖVP/total_stimmen*100, 
+         SPÖ_prozent = SPÖ/total_stimmen*100,
+         FPÖ_prozent = FPÖ/total_stimmen*100, 
+         GRÜNE_prozent = GRÜNE/total_stimmen*100,
+         NEOS_prozent = NEOS/total_stimmen*100,
+         KPÖ_prozent = KPÖ/total_stimmen*100, 
+         WIRS_prozent = WIRS/total_stimmen*100,
+         MFG_prozent = MFG/total_stimmen*100, .after = MFG) # calculate percentages of votes for each party in each municipality
+
+# join ltw with gemeinden
+
+gemeinden_ltw <- gemeinden %>%
+  left_join(ltw, by = c("gkz" = "gemnr")) %>% # join gemeinden with ltw based on the Gemeinde Nummer
+  dplyr::select(c(1:7), c(9:26), 8, -name) # reorder columns so geometry is last and delete names as this data is duplicated
 ```
 
 ```{r}
