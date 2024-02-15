@@ -130,14 +130,14 @@ sbg_karte <-tm_shape(bezirk_grenz) +
   tm_scale_bar(breaks = c(0, 10, 20, 30, 40, 50), text.size=0.75,
                position = c(0, -0.02))+
   # add credits
-  tm_credits("Projection: MGI / Austria GK M31\nData: Land Salzburg, OGD Österreich", 
+  tm_credits("Projection: MGI / Austria GK M31\nData: Land Salzburg, OGD Österreich, ESRI", 
              fontface = "bold",
              position = c(0.45,0),
              size = 0.6, 
              align = "left")
 
 sbg_karte
-print(inset_karte, vp = grid::viewport(0.8, 0.25, width = 0.3, height = 0.55))
+print(inset_karte, vp = grid::viewport(0.8, 0.22, width = 0.3, height = 0.53))
 
 
 # read in data on the Landtagswahl 2023 ----
