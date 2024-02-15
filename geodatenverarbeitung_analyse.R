@@ -53,9 +53,7 @@ bundesland <- gem_grenz_raw %>%
 # add data on counties
 bezirke <- st_read("/vsicurl/https://raw.githubusercontent.com/tyls-27/solar_salzburg/master/vgd/Salzburg_BEV_VGD_LAM.shp")
 
-bezirke$GKZ <- as.character(bezirke$GKZ)
-
-gem_grenz_raw$GEMNR <- as.character(gem_grenz_raw$GEMNR)
+bezirke$GKZ <- as.numeric(bezirke$GKZ)
 
 # combine with spatial df on Gemeinde - join information on counties
 bezirk_list <- gem_grenz_raw %>%
@@ -67,7 +65,10 @@ bezirk_list <- gem_grenz_raw %>%
     PB == "Salzburg(Stadt)" ~ "Salzburg (Stadt)",
     PB == "Sankt Johann im Pongau" ~ "Pongau",
     PB == "Zell am See" ~ "Pinzgau",
-    PB == "Tamsweg" ~ "Lungau"))
+    PB == "Tamsweg" ~ "Lungau")) %>%
+  mutate(PB = factor(PB, levels = c("Salzburg (Stadt)", "Flachgau", "Tennengau",
+                                    "Pongau", "Pinzgau", "Lungau"))) 
+  
 
 bezirk_grenz <- bezirk_list %>%
   group_by(PB) %>%
@@ -85,7 +86,6 @@ osm_sbg <- st_transform(osm_sbg, "EPSG: 31258")
 
 bbox_inset <- bbox_to_poly(bbox = c(-59991.8259,-143180.5017,896875.9305,548802.6460), crs = 31258)
 
-bbox_inset <- bbox_to_poly(bbox = c(-62709.1695,-11161.0815,755310.6523,460997.3222), crs = 31258)
 osm_sbg <- st_crop(osm_sbg, bbox_inset)
 
 aoi_inset <- bbox_to_poly(sbg_bbox, crs = 31258)
@@ -107,8 +107,8 @@ sbg_karte <-tm_shape(bezirk_grenz) +
               lwd = 1,
               col = "black") +
   tm_add_legend(col = brewer.pal(6,"Set1"), 
-                labels = c("Flachgau", "Lungaug", "Pinzgau", "Pongau", 
-                           "Salzburg (Stadt)", "Tennengau"),
+                labels = c("Salzburg (Stadt)", "Flachgau", "Tennengau", 
+                           "Pongau", "Pinzgau", "Lungau" ),
                 title = "Bezirke") +
   tm_add_legend(type = "line",
                 lwd = 4,
@@ -489,12 +489,6 @@ writeRaster(lc_geeignet, "daten_zwischenablage/lc_geeignet.tif", overwrite = T)
 
 lc_geeignet <- rast("daten_zwischenablage/lc_geeignet.tif")
 
-#### ------------------------------- Height ------------------------------- ####
-
-dgm <- rast("daten_zwischenablage/dgm.tif") 
-dgm_geeignet_fl <- mask(dgm, polygon_flaeche_geeignet)
-dgm_geeignet <- terra::clamp(dgm_geeignet_fl, upper=1500, value=FALSE)
-
 #### ----------------------------- Topography ----------------------------- ####
 
 # load in dgm
@@ -643,6 +637,7 @@ tm_shape(flaeche_geeignet) +
              align = "left")
 
 
+
 #### ----------- Cluster Analysis and Spatial Autoceorrelation ------------ ####
 #### calculate the amount of solar panel area in each municipality ----
 # Function to calculate area for each polygon
@@ -706,6 +701,8 @@ for (i in 1:nrow(gemeinden_voll)) {
 gemeinden_voll <- gemeinden_voll %>%
   add_column(bewohnte_flaeche = bewohnte_flaeche_pro_gemeinde)
 
+gemeinden_voll$bewohnte_flaeche <-  set_units(gemeinden_voll$bewohnte_flaeche,"m^2")
+
 #### Calculate amount of mountain area per municipality ----
 dgm_1500_zahl <- c(1500, Inf, 1)
 
@@ -754,8 +751,180 @@ gemeinden_data <- gemeinden_voll %>%
   relocate(solar_anteil, .after = pot_solar_flaeche) %>%
   relocate(gruenland_anteil, .after = gruenland_flaeche) %>%
   relocate(bewohnt_anteil, .after = bewohnte_flaeche) %>%
-  relocate(berg_anteil, .after = berg_flaeche) %>%
+  relocate(berg_anteil, .after = berg_flaeche) %>% 
+  mutate(einwohnerzahl_pro_qkm = bevölkerung/as.numeric(set_units(flaeche, km^2)), .after = bevölkerung) %>%
   st_as_sf()
+
+#### ---------------------------- Leaflet Map ----------------------------- ####
+# transform layers to 4326 for plotting
+flaeche_geeignet_4326 <- st_transform(flaeche_geeignet, "EPSG: 4326")
+fl_wid_solar_4326 <- st_transform(fl_wid_solar, "EPSG: 4326")
+fl_wid_bewohnt_4326 <- st_transform(fl_wid_bewohnt, "EPSG: 4326")
+pa_comb_4326 <- st_transform(pa_comb, "EPSG: 4326")
+gemeinden_data_4326 <- st_transform(gemeinden_data, "EPSG: 4326")
+bezirk_grenz_4326 <- st_transform(bezirk_grenz, "EPSG: 4326")
+
+# create basemap
+basemap <- leaflet() %>% 
+  setView(lng = 13, lat = 47.5, zoom = 8.4) %>%
+  # add different provider tiles
+  addProviderTiles(
+    "OpenStreetMap",
+    # give the layer a name
+    group = "OpenStreetMap"
+  ) %>%
+  addProviderTiles(
+    "CartoDB.Positron",
+    group = "CartoDB.Positron"
+  ) %>%
+  addProviderTiles(
+    "Esri.WorldTopoMap",
+    group = "Esri.WorldTopoMap"
+  ) %>%
+  addProviderTiles(
+    "Esri.WorldImagery",
+    group = "Esri.WorldImagery"
+  ) %>%
+  addProviderTiles(
+    "Esri.WorldTerrain",
+    group = "Esri.WorldTerrain"
+  ) %>%
+  addLayersControl(
+    baseGroups = c(
+      "OpenStreetMap","CartoDB.Positron", "Esri.WorldTopoMap",
+      "Esri.WorldImagery", "Esri.WorldTerrain"
+    ),
+    # position it on the topleft
+    position = "topleft"
+  )
+
+
+basemap %>%
+  
+  addPolygons(
+    data = bezirk_grenz_4326,
+    stroke = TRUE,
+    # set the color of the polygon
+    color = "black",
+    # set the opacity of the outline
+    opacity = 1,
+    # set the stroke width in pixels
+    weight = 2,
+    fillColor = "whitesmoke",
+    # set the fill opacity
+    fillOpacity = 0.3,
+    group = "Bezirke",
+    popup = paste("<b>Bezirk</b> ", "<br>", bezirk_grenz_4326$PB),
+    highlightOptions = highlightOptions(color = "black", weight = 4, bringToFront = TRUE)
+  ) %>%
+  addPolygons(
+    data = fl_wid_solar_4326,
+    # set the color of the polygon
+    color = "red",
+    # set the opacity of the outline
+    opacity = 1,
+    # set the stroke width in pixels
+    weight = 1,
+    # set the fill opacity
+    fillColor = "red",
+    fillOpacity = 0.6,
+    group = "Bestehende Solaranlagen"
+  ) %>%
+  
+  addPolygons(
+    data = flaeche_geeignet_4326,
+    # set the color of the polygon
+    color = "yellow",
+    # set the opacity of the outline
+    opacity = 1,
+    # set the stroke width in pixels
+    weight = 1,
+    fillColor = "yellow",
+    # set the fill opacity
+    fillOpacity = 0.6,
+    group = "Geeignete Solarfläche"
+  ) %>%
+  
+  addPolygons(
+    data = pa_comb_4326,
+    # set the color of the polygon
+    color = "green",
+    # set the opacity of the outline
+    opacity = 1,
+    # set the stroke width in pixels
+    weight = 1,
+    fillColor = "green",
+    # set the fill opacity
+    fillOpacity = 0.6,
+    group = "Schutzgebiete"
+  ) %>%
+  addPolygons(
+    data = fl_wid_bewohnt_4326,
+    # set the color of the polygon
+    color = "brown",
+    # set the opacity of the outline
+    opacity = 1,
+    # set the stroke width in pixels
+    weight = 1,
+    fillColor = "brown",
+    # set the fill opacity
+    fillOpacity = 0.6,
+    group = "Bewohnte Gebiete"
+  ) %>%
+  addPolygons(
+    data = gemeinden_ltw_4326,
+    stroke = TRUE,
+    # set the color of the polygon
+    color = "black",
+    # set the opacity of the outline
+    opacity = 1,
+    # set the stroke width in pixels
+    weight = 1,
+    fillColor = "grey",
+    # set the fill opacity
+    fillOpacity = 0,
+    group = "Gemeinden",
+    popup = paste("<b><span style='font-weight: bold;'>",
+                  "<div style='text-align: center;'>",
+                  gemeinden_data_4326$gemeindename, 
+                  "<div style='text-align: left;'>",
+                  "<br><b>Bevölkerung</br> ",
+                  "<br><b>Einwohnerzahl:</b> ", 
+                  "<b><span style='font-weight: normal;'>",
+                  gemeinden_data_4326$bevölkerung,
+                  "<br><b>Bevölkerungsdichte:</b> ", 
+                  format(round(gemeinden_data_4326$einwohnerzahl_pro_qkm, 3), 
+                         nsmall = 3), "Einwohner/km","<br>", 
+                  "<br><b>Solar</br> ",
+                  "<br><b>Geeignete Solarfläche (Absolut):</b> ", 
+                  "<b><span style='font-weight: normal;'>",
+                  format(round(set_units(gemeinden_data_4326$pot_solar_flaeche,
+                                         km^2), 3), nsmall = 3),
+                  "<br><b>Geeignete Solarfläche (Anteil):</b> ", 
+                  format(round(gemeinden_data_4326$solar_anteil, 3), 
+                         nsmall = 3), "%", "<br>", "<br><b>Landnutzung</br> ",
+                  "<br><b>Grünland (Anteil):</b> ", 
+                  "<b><span style='font-weight: normal;'>",
+                  format(round(gemeinden_data_4326$gruenland_anteil, 3), nsmall = 3),
+                  "%","<br><b>Bewohnte Gebiete (Anteil):</b> ", 
+                  format(round(gemeinden_data_4326$bewohnt_anteil, 3), nsmall = 3), 
+                  "%", "<br><b>Bergfläche (Anteil):</b> ", 
+                  format(round(gemeinden_data_4326$berg_anteil, 3), nsmall = 3), 
+                  "%"),
+    highlightOptions = highlightOptions(color = "black", weight = 4, bringToFront = TRUE)
+  ) %>%
+  # add a layers control
+  addLayersControl(
+    baseGroups = c(
+      "OpenStreetMap","CartoDB.Positron", "Esri.WorldTopoMap",
+      "Esri.WorldImagery", "Esri.WorldTerrain"
+    ),
+    overlayGroups = c("Bezirke", "Gemeinden", "Bestehende Solaranlagen", 
+                      "Geeignete Solarfläche", "Schutzgebiete", 
+                      "Bewohnte Gebiete"),
+    # position it on the top left
+    position = "topleft"
+  )
 
 
 # st_write(gemeinden_data, "daten_zwischenablage/gemeinden_data.shp")
@@ -763,6 +932,7 @@ gemeinden_data <- gemeinden_voll %>%
 # read in gemeinden_data
 
 # gemeinden_data <- st_read("daten_zwischenablage/gemeinden_data.shp")
+
 
 #### Spatial autocorrelation ----
 #### Calculate spatial autocorrelation of solar areas
@@ -1048,7 +1218,7 @@ tm_shape(gemeinden_GI)+
              lwd=2) + 
   tm_layout(main.title = "Geeignete Solarfläche (absolut) - Hotspot Analyse", 
             main.title.fontface = 2,fontfamily = "Arial",main.title.size = 1.2, 
-            legend.outside = TRUE,legend.text.size = 0.75, 
+            legend.outside = TRUE, legend.text.size = 0.75, 
             legend.position = c("left","top"), 
             legend.title.size = 1.5, 
             legend.title.fontface = 1.5, 
@@ -1197,29 +1367,28 @@ tm_shape(gemeinden_GI)+
              align = "left")
          
 #### Cluster analysis ----
-# (macht keinen Sinne)
+# (macht keinen Sinne?)
 #remove total population and birth data split by EU, rest of Europe, 
 #rest of the world and other countries columns, and also only retain data
 #for top 3 parties for analysis and standardise data for clustering
 
 gemeinden_clus <- gemeinden_data %>% 
   as_tibble() %>%
-  dplyr::select(c(1:3, 24, 26, 28, 30, 31, 32)) %>%
-  mutate(einwohnerzahl_pro_qm = bevölkerung/as.numeric(flaeche), .after = bevölkerung) %>%
-  mutate_at(c(4:8), ~(scale(.) %>% as.vector)) %>%
-  column_to_rownames("gemeindename")# need to convert to sf before plotting
+  dplyr::select(c(1:2, 4, 25, 27, 29, 31, 33)) %>%
+  mutate_at(c(3:7), ~(scale(.) %>% as.vector)) %>%
+  column_to_rownames("gemeindename")
 
 #calculate silhouette coefficient to determine number of clusters
-fviz_nbclust(gemeinden_clus[,3:7], kmeans, method = "wss")
+fviz_nbclust(gemeinden_clus[,2:6], kmeans, method = "wss")
 
-clusters <- kmeans(gemeinden_clus[,3:7], centers=3, nstart=25)
+clusters <- kmeans(gemeinden_clus[,2:6], centers=3, nstart=25)
 
 clusters
 
-fviz_cluster(clusters, data = gemeinden_clus[,3:7])
+fviz_cluster(clusters, data = gemeinden_clus[,2:6])
 
 gemeinden_clus <- gemeinden_clus %>%
-  mutate(cluster = clusters$cluster, .after = flaeche) %>%
+  mutate(cluster = clusters$cluster, .after = berg_anteil) %>%
   st_as_sf()
 
 #### Map clusters
@@ -1238,7 +1407,7 @@ cluster_map <- tm_shape(gemeinden_clus) +
                 labels = c("1", "2", "3"),
                 title = "Clusters") +
   # add title
-  tm_layout(main.title = "Merkmale der Gemeinden - Einwohnerzahl", 
+  tm_layout(main.title = "Merkmale der Gemeinden", 
             main.title.fontface = 2,fontfamily = "Arial",main.title.size = 1.2, 
             legend.outside = TRUE,legend.text.size = 0.75, 
             legend.position = c("left","top"), 
@@ -1261,12 +1430,23 @@ cluster_map <- tm_shape(gemeinden_clus) +
 #### Statistically explore the relationship between these variables ----
 
 # build a linear model based
-fit <- lm(solar_anteil ~ gruenland_anteil + bewohnt_anteil + berg_anteil + bevölkerung, gemeinden_data)
+fit <- lm(solar_anteil ~ gruenland_anteil + bewohnt_anteil + berg_anteil + einwohnerzahl_pro_qkm, gemeinden_data)
 
 # look at fit of linear model
 summary(fit)
 
-# critiques - ofc when include these factors in crieria they likely to have effect, but interseting to see what effect and the significance
+# critiques - ofc when include these factors in criteria they likely to have effect, but interseting to see what effect and the significance
+
+
+#### ---------------------------- Election Map ---------------------------- ####
+
+ltw_geo <- gemeinden_data %>%
+  select(c(1:2, 15:22, 33)) %>%
+  rename_with(~str_remove(., "_prozent"), ends_with("_prozent")) %>%
+  rename(Grüne = GRÜNE) %>%
+  rowwise() %>%
+  mutate(staerkste_partei = names(.)[which.max(c_across(3:10))+2], .after = MFG)
+
 
 
 
