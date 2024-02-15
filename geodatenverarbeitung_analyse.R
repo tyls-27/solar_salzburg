@@ -861,18 +861,18 @@ basemap %>%
   addPolygons(
     data = fl_wid_bewohnt_4326,
     # set the color of the polygon
-    color = "brown",
+    color = "chocolate4",
     # set the opacity of the outline
     opacity = 1,
     # set the stroke width in pixels
     weight = 1,
-    fillColor = "brown",
+    fillColor = "chocolate4",
     # set the fill opacity
     fillOpacity = 0.6,
     group = "Bewohnte Gebiete"
   ) %>%
   addPolygons(
-    data = gemeinden_ltw_4326,
+    data = gemeinden_data_4326,
     stroke = TRUE,
     # set the color of the polygon
     color = "black",
@@ -1445,13 +1445,20 @@ ltw_geo <- gemeinden_data %>%
   rename_with(~str_remove(., "_prozent"), ends_with("_prozent")) %>%
   rename(Grüne = GRÜNE) %>%
   rowwise() %>%
-  mutate(staerkste_partei = names(.)[which.max(c_across(3:10))+2], .after = MFG)
+  mutate(staerkste_partei = names(.)[which.max(c_across(3:10))+2], .after = MFG) %>%
 
+gewinspanne_func <- function(reihe) {
+  reihe_sortiert <- sort(as.numeric(reihe), decreasing = TRUE)
+  differenz <- reihe_sortiert[1] - reihe_sortiert[2]
+  return(differenz)
+}
 
+ltw_geo$gewinnspanne <- apply(ltw_geo[, -c(1:2, (ncol(ltw_geo) - 1):ncol(ltw_geo))], 1, gewinspanne_func)
 
+ltw_geo <- ltw_geo %>%
+  select(c(1:11, 13, 12))
 
-
-
+# create different tm_polygons and fill accordingly? SPÖ, ÖVP and FPÖ
 #### ---------------------------- Election Maps --------------------------- ####
 
 #### Map of Salzburg with Gemeindegrenzen (names) and inset map
@@ -1510,5 +1517,9 @@ tm_shape(gemeinden_clus) +
 
 # DLM_2000_BAUTEN_20230912 - stromleitungen
 
+# Limitations with Flächenwidmung
+
 # ob es politisch durchsetzbar ist, koennte eine folgende Stuide sein
 # decision support system - wo werden die grÃ¶ÃŸte Anzahl von Einwohnern betroffen
+# ob es wirtschaftloch Sinne macht, solche kleine Anlagen zu bauen - oder lieber
+# größere Anlagen, die zusammengeschlossen sind
