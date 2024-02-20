@@ -45,7 +45,6 @@ library(knitr)
 library(kableExtra)
 ```
 
-
 ## Dateneinlesen
 
 ```{r, eval = TRUE}
@@ -66,94 +65,119 @@ gem_grenz_raw <- st_read("/vsicurl/https://raw.githubusercontent.com/tyls-27/sol
 
 # download data on municipality populations ----
 pop_raw <- read_csv("https://raw.githubusercontent.com/tyls-27/solar_salzburg/master/Bev_2023_nach_Katastralgemeinden.csv",
-                    skip = 1) # skip first row so that columns names are the headers
+                    # skip first row so that columns names are the headers
+                    skip = 1) 
 
 # create a polygon with the boundaries of Sazlburg state
 bundesland <- gem_grenz_raw %>%
-  mutate(merge_id = 1) %>% # generate IDs for grouping
+  # generate IDs for grouping
+  mutate(merge_id = 1) %>% 
   group_by(merge_id) %>%
   summarise(geometry = sf::st_union(geometry)) %>%
   ungroup()
 ```
 
-
-```{r}
+```{r, eval=TRUE}
 #### -------------------------- Map of Salzburg --------------------------- ####
 # add data on counties
 bezirke <- st_read("/vsicurl/https://raw.githubusercontent.com/tyls-27/solar_salzburg/master/vgd/Salzburg_BEV_VGD_LAM.shp")
 
-bezirke$GKZ <- as.character(bezirke$GKZ)
-
-gem_grenz_raw$GEMNR <- as.character(gem_grenz_raw$GEMNR)
+# change bezirke$GKZ to numeric to match joining row's format
+bezirke$GKZ <- as.numeric(bezirke$GKZ)
 
 # combine with spatial df on Gemeinde - join information on counties
 bezirk_list <- gem_grenz_raw %>%
-  left_join(dplyr::select(as_tibble(bezirke), "PB", "GKZ"), by = c("GEMNR" = "GKZ")) %>%
+  left_join(dplyr::select(as_tibble(bezirke), "PB", "GKZ"), 
+            by = c("GEMNR" = "GKZ")) %>%
   distinct(GEMNR, .keep_all = TRUE) %>%
-  mutate(PB = case_when(
+  # change names of Bezirke to traditional areas
+  mutate(PB = case_when(          
     PB == "Salzburg-Umgebung" ~ "Flachgau",
     PB == "Hallein" ~ "Tennengau",
     PB == "Salzburg(Stadt)" ~ "Salzburg (Stadt)",
     PB == "Sankt Johann im Pongau" ~ "Pongau",
     PB == "Zell am See" ~ "Pinzgau",
     PB == "Tamsweg" ~ "Lungau")) %>%
+  # for ordering in map legend
   mutate(PB = factor(PB, levels = c("Salzburg (Stadt)", "Flachgau", "Tennengau",
                                     "Pongau", "Pinzgau", "Lungau"))) 
-  
+                                  
+
+# combine geometries of indiviual municpalities to get geometries for counties
 bezirk_grenz <- bezirk_list %>%
   group_by(PB) %>%
   summarise(geometry = sf::st_union(geometry)) %>%
   ungroup()
-  
-# transform gem_grenz_raw to osm CRS
+```
+
+```{r}
+# Prepare data for plotting
+# transform gem_grenz_raw to OSM CRS
 gem_grenz_raw_3857 <- st_transform(gem_grenz_raw, "EPSG: 3857")
 
-sbg_bbox <- st_bbox(gem_grenz_raw)
-
+# extract map for inset map based on extent of gem_grenz_raw_3857
 osm_sbg <- read_osm(gem_grenz_raw_3857, type = "esri-natgeo", ext=7)
 
+# transform back to working CRS - EPSG:31258
 osm_sbg <- st_transform(osm_sbg, "EPSG: 31258")
 
-bbox_inset <- bbox_to_poly(bbox = c(-59991.8259,-143180.5017,896875.9305,548802.6460), crs = 31258)
+# create polygon to crop transformed inset map
+bbox_inset <- bbox_to_poly(bbox = c(-59991.8259,-143180.5017,896875.9305,
+                                    548802.6460), crs = 31258)
 
+# crop osm_sbg to extent of bbox
 osm_sbg <- st_crop(osm_sbg, bbox_inset)
 
+# extract bbox from gem_grenz_raw
+sbg_bbox <- st_bbox(gem_grenz_raw)
+
+# use sbg_bbox to create a polygon to highlight area of interest in inset map
 aoi_inset <- bbox_to_poly(sbg_bbox, crs = 31258)
 ```
 
-
 ```{r, eval = TRUE}
-# Salzburg Map Code
+# Salzburg Map Plot Code
+
+# create inset map
 inset_karte<- tm_shape(osm_sbg) + 
   tm_rgb() +
   tm_shape(aoi_inset) +
   tm_borders(col="red", lwd = 3) +
   tm_layout(frame = F)
 
-sbg_karte <-tm_shape(bezirk_grenz) +
+# create map of Salzburg with county and municipality boundaries
+sbg_karte <-tm_shape(bezirk_grenz) + 
   tm_fill(col = "PB",
+          # give each county a different fill shade
           palette = brewer.pal(6,"Set1"),
           legend.show = F) +
-  tm_borders(lwd = 4,
+  # add borders of counties  
+  tm_borders(lwd = 4,                 
              col = "black") +
   tm_shape(gem_grenz_raw) +
-  tm_polygons(alpha = 0, 
+  # add shape and border of municipalities
+  tm_polygons(alpha = 0,             
               lwd = 1,
               col = "black") +
-  tm_add_legend(col = brewer.pal(6,"Set1"), 
+  # add legend for county fill
+  tm_add_legend(col = brewer.pal(6,"Set1"),  
+                # custom ordering of counties in legend
                 labels = c("Salzburg (Stadt)", "Flachgau", "Tennengau", 
-                           "Pongau", "Pinzgau", "Lungau" ),
-                title = "Bezirke") +
-  tm_add_legend(type = "line",
+                           "Pongau", "Pinzgau", "Lungau" ), 
+                title = "Bezirke") + 
+  # add legend for county borders
+  tm_add_legend(type = "line", 
                 lwd = 4,
                 col = "black",
                 labels = "Bezirksgrenzen") +
-  tm_add_legend(type = "line",
+  # add legend for municipality borders
+  tm_add_legend(type = "line", 
                 lwd = 1,
                 col = "black",
                 labels = "Gemeindegrenzen") + 
-  tm_layout(legend.outside = TRUE,legend.text.size = 0.75, 
-            legend.position = c("left","top"), 
+  tm_layout(legend.outside = TRUE, # place legend outside of map frame
+            legend.text.size = 0.75, 
+            legend.position = c("left","top"), # determine legend position
             legend.title.size = 1.5, 
             legend.title.fontface = 1.5,
             frame = F) + 
@@ -164,17 +188,20 @@ sbg_karte <-tm_shape(bezirk_grenz) +
   tm_scale_bar(breaks = c(0, 10, 20, 30, 40, 50), text.size=0.75,
                position = c(0, -0.02))+
   # add credits
-  tm_credits("Projection: MGI / Austria GK M31\nData: Land Salzburg, OGD Österreich, ESRI", 
+  tm_credits("Projection: MGI / Austria GK M31\nData: Land Salzburg, 
+             OGD Österreich, ESRI", 
              fontface = "bold",
              position = c(0.45,0),
              size = 0.6, 
              align = "left")
 
+# print map
 sbg_karte
 print(inset_karte, vp = grid::viewport(0.8, 0.22, width = 0.3, height = 0.53))
 ```
 
 ```{r, eval=TRUE}
+# create a knitr table with a list of counties and their municipalities
 kbl(select(as_tibble(bezirk_list),c("PB", "NAME")), 
     col.names = c("Bezirk", "Gemeinde"), align = "c") %>%
   kable_paper(full_width = F) %>%
@@ -197,13 +224,17 @@ lc_b_raw <- rast("offline_files/land_cover/ESA_WorldCover_10m_2021_v200_N48E012_
 # combine raster layers
 lc_comb <- terra::merge(lc_a_raw, lc_b_raw)
 
-# crop raster to extent of Salzburg bb (if needed - not necessary for below steps)
-gem_grenz_4326 <- st_transform(gem_grenz_raw, "EPSG:4326")# transform CRS to that of lc_comb
-lc_comb_sbg_bb <- terra::crop(lc_comb, gem_grenz_4326) # crop lc data to Salzburg bb
+# transform CRS to that of lc_comb - quicker than reprojecting both rasters
+gem_grenz_4326 <- st_transform(gem_grenz_raw, "EPSG:4326") 
 
-# mask raster to extent of Salzburg polygon
-bundesland_4326 <- st_transform(bundesland, "EPSG:4326") # transfrom Salzburg boundaries to EPSG: 4326
-lc_comb_sbg <- terra::mask(lc_comb, bundesland_4326) # mask lc data to Salzburg
+# crop lc data to Salzburg bb
+lc_comb_sbg_bb <- terra::crop(lc_comb, gem_grenz_4326) 
+
+# transfrom Salzburg boundaries to EPSG: 4326
+bundesland_4326 <- st_transform(bundesland, "EPSG:4326") 
+
+# mask lc data to Salzburg
+lc_comb_sbg <- terra::mask(lc_comb, bundesland_4326)
 
 # re-project lc_comb_sbg to working CRS
 lc_sbg <- project(lc_comb_sbg, "EPSG: 31258")
@@ -211,7 +242,7 @@ lc_sbg <- project(lc_comb_sbg, "EPSG: 31258")
 
 ```{r, include = FALSE}
 # write out raster to save time on processing
-writeRaster(lc_sbg, "daten_zwischenablage/lc_sbg.tif", overwrite = TRUE) # write out raster
+writeRaster(lc_sbg, "daten_zwischenablage/lc_sbg.tif", overwrite = TRUE) 
 ```
 
 ```{r, eval = TRUE}
@@ -220,16 +251,21 @@ fl_wid_raw <- st_read("offline_files/Flaechenwidmung/Flaechenwidmung.shp")
 ```
 
 ```{r}
-# read in dsm (topographical data) ----
+# read in digital surface model (topographical data) ----
 dgm <- rast("offline_files/dgm5m/dgm5m.asc")
 
-# convert to working crs of EPSG: 31258 (if not already in it)
-dgm <- project(dgm, "epsg:31258")
+# convert to working crs of EPSG: 31258 
+dgm <- project(dgm, "EPSG:31258")
+```
 
+```{r, include=FALSE}
+# write out raster
 writeRaster(dgm, "daten_zwischenablage/dgm.tif") # write out raster
 ```
 
 ```{r, eval = TRUE}
+#### Load data on protected areas
+
 # download data on FFH sites ----
 ffh_raw <- st_read("/vsicurl/https://raw.githubusercontent.com/tyls-27/solar_salzburg/master/Europaschutzgebiete_FFH_RL/Europaschutzgebiete_FFH_RL.shp")
 
@@ -265,17 +301,17 @@ psg_raw <- st_read("/vsicurl/https://raw.githubusercontent.com/tyls-27/solar_sal
 
 # download data on wildlife reserves ----
 wsg_raw <- st_read("/vsicurl/https://raw.githubusercontent.com/tyls-27/solar_salzburg/master/Wild_Europaschutzgebiete_VS_RL/Wild_Europaschutzgebiete_VS_RL.shp")
-
 ```
 
 ## Weitere Datenbereinigung
+
 ```{r, eval = TRUE}
 #### ------------------------ Further Data Cleaning ----------------------- ####
 # clean the column names of all data frames and spatial data frames ----
 # Get a list of all data frames in the global environment
 df_list <- Filter(is.data.frame, mget(ls()))
 
-# Loop through each data frame, apply clean_names(), and rename the data frame
+# Loop through each data frame, apply clean_names(), and rename the data frame by removing _raw and pasting _clean
 for (df_name in names(df_list)) {
   # Apply clean_names() to the data frame
   cleaned_df <- clean_names(get(df_name))
@@ -307,17 +343,25 @@ gemeinden <- pop_clean %>%
 ```
 
 ```{r, eval = TRUE}
-# merge together gemeinde data with Landtagswahl data from 2023
+# merge together municipality data with Landtagswahl data from 2023
 # clean ltw_raw
 ltw <- ltw_clean %>%
+  # rename columns
   rename(gemnr = 1, name = 2, ÖVP = 9, SPÖ = 11, FPÖ = 13, GRÜNE = 15, 
-         NEOS = 17, KPÖ = 19, WIRS = 21, MFG = 23) %>% # rename rows
-  filter(!row_number() %in% c(1:17, 137:nrow(ltw_clean))) %>% # remove rows which don't contain municipality level data
-  dplyr::select(-c(3:8, 10, 12, 14, 16, 18, 20, 22, 24:ncol(ltw_clean))) %>% # remove columns that contain percentage data, turnout values and those that contain no data
-  mutate_at(c(3:10), ~str_replace_all(., "\\.", "")) %>% # remove all the . in columns containing vote data
-  mutate_at(c(3:10), as.numeric) %>% # set columns containing vote data to numeric
-  mutate_at(1, as.double) %>% # set to double to allow for joining with gemeinden later
-  mutate(total_stimmen = rowSums(across(ÖVP:MFG))) %>% # sum up the total number of votes for each municipality
+         NEOS = 17, KPÖ = 19, WIRS = 21, MFG = 23) %>% 
+  # remove rows which don't contain municipality level data
+  filter(!row_number() %in% c(1:17, 137:nrow(ltw_clean))) %>% 
+  dplyr::select(-c(3:8, 10, 12, 14, 16, 18, 20, 22, 24:ncol(ltw_clean))) %>% 
+  # remove columns that contain percentage data, turnout values and those that contain no data !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  # remove all the in columns containing vote data
+  mutate_at(c(3:10), ~str_replace_all(., "\\.", "")) %>% 
+  # set columns containing vote data to numeric
+  mutate_at(c(3:10), as.numeric) %>% 
+  # set to double to allow for joining with gemeinden later
+  mutate_at(1, as.double) %>% 
+  # sum up the total number of votes for each municipality
+  mutate(total_stimmen = rowSums(across(ÖVP:MFG))) %>% 
+  # calculate percentage of votes for each party in each municipality
   mutate(ÖVP_prozent = ÖVP/total_stimmen*100, 
          SPÖ_prozent = SPÖ/total_stimmen*100,
          FPÖ_prozent = FPÖ/total_stimmen*100, 
@@ -325,13 +369,14 @@ ltw <- ltw_clean %>%
          NEOS_prozent = NEOS/total_stimmen*100,
          KPÖ_prozent = KPÖ/total_stimmen*100, 
          WIRS_prozent = WIRS/total_stimmen*100,
-         MFG_prozent = MFG/total_stimmen*100, .after = MFG) # calculate percentages of votes for each party in each municipality
+         MFG_prozent = MFG/total_stimmen*100, .after = MFG) 
 
 # join ltw with gemeinden
-
 gemeinden_ltw <- gemeinden %>%
-  left_join(ltw, by = c("gkz" = "gemnr")) %>% # join gemeinden with ltw based on the Gemeinde Nummer
-  dplyr::select(c(1:7), c(9:26), 8, -name) # reorder columns so geometry is last and delete names as this data is duplicated
+  # join gemeinden with ltw based on the Gemeinde Nummer
+  left_join(ltw, by = c("gkz" = "gemnr")) %>% 
+  # reorder columns so geometry is last and delete names as this data is duplicated
+  dplyr::select(c(1:7), c(9:26), 8, -name) 
   
 ```
 
@@ -340,8 +385,8 @@ gemeinden_ltw <- gemeinden %>%
 
 # merge cleaned datasets using bind_rows 
 pa_all <- bind_rows(ffh_clean, geschuezte_lt_clean, geschuezte_ng_clean, 
-                    lsg_clean, natura2000_clean, nd_clean, np_clean, nsg_clean, 
-                    psg_clean, ramsar_clean, spa_clean, wsg_clean)
+                    lsg_clean, natura2000_clean, nd_clean, np_clean,
+                    nsg_clean,psg_clean, ramsar_clean, spa_clean, wsg_clean)
 ```
 
 ```{r, eval = TRUE}
@@ -363,9 +408,10 @@ if ("geometry" %in% names(fl_wid_clean)) {
   
 }
 
-# extra data for water, roads, train tracks, solar parks, populated areas, 
+# extract data for water, roads, train tracks, populated areas, 
 # enterprise areas and solar farms and add a key for these categories
 
+# populated areas
 fl_wid_bewohnt <- fl_wid_clean %>%
   filter(typname == "BARW" | typname == "BAEW" | typname == "BAFW" | 
            typname == "BAKG" | typname == "BALK" | typname == "BADG" | 
@@ -375,12 +421,14 @@ fl_wid_bewohnt <- fl_wid_clean %>%
            typname == "BABG") %>%
   mutate(kategorie = "bewohnt")
 
+# residnetial areas
 fl_wid_wohngebiete <- fl_wid_clean %>%
   filter(typname == "BARW" | typname == "BAEW" | typname == "BAFW" | 
            typname == "BAKG" | typname == "BALK" | typname == "BADG" | 
            typname == "BAZG" | typname == "BABG") %>%
   mutate(kategorie = "wohngebiet")
 
+# enterprise/industrial areas
 fl_wid_betriebe <- fl_wid_clean %>%
   filter(typname == "BADG" | typname == "BABE" | typname == "BAGG" | 
            typname == "BAIG" | typname == "BAHV" | typname == "BAHC" | 
@@ -388,40 +436,51 @@ fl_wid_betriebe <- fl_wid_clean %>%
            typname == "BABG" | typname == "GLMG") %>%
   mutate(kategorie = "betrieb")
 
+# water 
 fl_wid_gewaesser <- fl_wid_clean %>%
   filter(typname == "GLGG") %>%
   mutate(kategorie = "gewaesser")
 
+# train tracks
 fl_wid_bahn <- fl_wid_clean %>%
   filter(typname == "VEEB") %>%
   mutate(kategorie = "bahn")
 
+# roads
 fl_wid_str <- fl_wid_clean %>%
   filter(typname == "VEGM" | typname == "VEBL" | typname == "VESO") %>%
   mutate(kategorie = "strasse")
 
+# solar farms
 fl_wid_solar <- fl_wid_clean %>%
   filter(typname == "GLSA") %>%
   mutate(kategorie = "solar")
 
-# combine these into a new spatial dataframe with a key for 
-fl_wid_kat_alle <- bind_rows(list(fl_wid_bahn, fl_wid_betriebe, fl_wid_bewohnt, 
-                                  fl_wid_gewaesser, fl_wid_str, 
-                                  fl_wid_wohngebiete, fl_wid_solar))
+# combine these into a new spatial dataframe with a key for each zoning category
+fl_wid_kat_alle <- bind_rows(list(fl_wid_bahn, fl_wid_betriebe,
+                                  fl_wid_bewohnt, fl_wid_gewaesser,
+                                  fl_wid_str, fl_wid_wohngebiete,
+                                  fl_wid_solar))
 ```
 
 ## Puffer Erstellen, Festellung von ausgeschlossenen Gebieten
 
 ### Straßen
+
 ```{r}
 #### -------------------------------- Roads ------------------------------- ####
 # create buffer around roads
 str_buffer <- fl_wid_kat_alle %>%
-  filter(kategorie == "strasse") %>% # choose roads from df
-  select(geometry) %>% # select only the geometry column for spatial operations
-  st_union() %>% # combine all road geometries into one polygon geometry
-  st_buffer(500)%>% # 500 m buffer around geometries
-  st_intersection(bundesland_clean) # clip to size of state
+  # choose roads from df
+  filter(kategorie == "strasse") %>% 
+  # select only the geometry column for spatial operations
+  select(geometry) %>% 
+  # combine all road geometries into one polygon geometry
+  st_union() %>% 
+  # 500 m buffer around geometries
+  st_buffer(500) %>% 
+  # clip to size of state
+  st_intersection(bundesland_clean) 
 ```
 
 ```{r, include=FALSE}
@@ -433,16 +492,23 @@ str_buffer <- st_read("/vsicurl/https://raw.githubusercontent.com/tyls-27/solar_
 ```
 
 ### Bewohnte Gebiete
+
 ```{r}
 #### --------------------------- Populated Areas -------------------------- ####
 # create buffer around populated areas
+
 # combine all populated area geometries into one polygon geometry
 bewohnt_buffer <- fl_wid_kat_alle %>%
-  filter(kategorie == "bewohnt") %>% # choose populated areas from df
-  select(geometry) %>% # select only the geometry column for spatial operations
-  st_union() %>% # combine all populated area geometries into one polygon geometry
-  st_buffer(2500)%>% # 2500 m buffer around geometries
-  st_intersection(bundesland_clean) # clip to size of state
+  # choose populated areas from df
+  filter(kategorie == "bewohnt") %>% 
+  # select only the geometry column for spatial operations
+  select(geometry) %>% 
+  # combine all populated area geometries into one polygon geometry
+  st_union() %>% 
+  # 2500 m buffer around geometries
+  st_buffer(2500)%>% 
+  # clip to size of state
+  st_intersection(bundesland_clean) 
 
 ```
 
@@ -456,16 +522,23 @@ bewohnt_buffer <- st_read("/vsicurl/https://raw.githubusercontent.com/tyls-27/so
 ```
 
 ### Wohngebiete
+
 ```{r}
 #### -------------------------- Residential Areas ------------------------- ####
 # create buffer around residential areas
+
 # combine all residential area geometries into one polygon geometry
 wohngebiete_buffer <- fl_wid_kat_alle %>%
-  filter(kategorie == "wohngebiet") %>% # choose residential areas from df
-  select(geometry) %>% # select only the geometry column for spatial operations
-  st_union() %>% # combine all residential area geometries into one polygon geometry
-  st_buffer(500)%>% # 500 m buffer around geometries
-  st_intersection(bundesland_clean) # clip to size of state
+  # choose residential areas from df
+  filter(kategorie == "wohngebiet") %>% 
+  # select only the geometry column for spatial operations
+  select(geometry) %>% 
+  # combine all residential area geometries into one polygon geometry
+  st_union() %>% 
+  # 500 m buffer around geometries
+  st_buffer(500) %>% 
+  # clip to size of state
+  st_intersection(bundesland_clean) 
 ```
 
 ```{r, include = FALSE}
@@ -478,16 +551,23 @@ wohngebiete_buffer <- st_read("/vsicurl/https://raw.githubusercontent.com/tyls-2
 ```
 
 ### Betriebsgebiete
+
 ```{r}
 #### --------------------- Enterprise/Indsutrial Areas -------------------- ####
 # create buffer around enterprise/industrial areas
+
 # combine all enterprise/industrial area geometries into one polygon geometry
 betriebe_buffer <- fl_wid_kat_alle %>%
-  filter(kategorie == "betrieb") %>% # choose residential areas from df
-  select(geometry) %>% # select only the geometry column for spatial operations
-  st_union() %>% # combine all enterprise/industral area geometries into one polygon geometry
-  st_buffer(3500)%>% # 3500 m buffer around geometries
-  st_intersection(bundesland_clean) # clip to size of state
+  # choose residential areas from df
+  filter(kategorie == "betrieb") %>% 
+  # select only the geometry column for spatial operations
+  select(geometry) %>% 
+  # combine all enterprise/industral area geometries into one polygon geometry
+  st_union() %>% 
+  # 3500 m buffer around geometries
+  st_buffer(3500) %>% 
+  # clip to size of stat
+  st_intersection(bundesland_clean) e
 ```
 
 ```{r, include = FALSE}
@@ -500,10 +580,10 @@ betriebe_buffer <- st_read("/vsicurl/https://raw.githubusercontent.com/tyls-27/s
 ```
 
 ### Schutzgebiete
+
 ```{r, eval = TRUE}
 #### --------------------------- Protected Areas -------------------------- #### 
 # combine all polygons together on Protected Area Data
-## use old dataframe for interactive leaflet map
 
 # check validity of all geometries and correct if not
 if ("geometry" %in% names(pa_all)) {
@@ -518,7 +598,7 @@ if ("geometry" %in% names(pa_all)) {
     
   }
   
-  # Use st_union to join all pa geometries into one multipolygon
+  # Join all protected area geometries into one multipolygon
   pa_comb <- st_union(pa_all$geometry)
   
 } 
@@ -529,12 +609,12 @@ if ("geometry" %in% names(pa_all)) {
 ```{r}
 #### ---------- Combine vector buffers and geometric conditions ----------- ####
 # combine buffers outlining appropriate places - betriebe, bewohnt, str 
-polygon_flaeche_geeignet_rein <- bind_rows(list(betriebe_buffer, bewohnt_buffer, 
+polygon_flaeche_geeignet_rein <- bind_rows(list(betriebe_buffer,
+                                                bewohnt_buffer, 
                                                 str_buffer)) %>%
   st_union()
 
-# combine geometry of existing buildings, streets, protected areas and the 
-# residential buffer
+# combine geometries of residential, populated , and enterprise/industrial areas, streets, train tracks, protected areas and water bodies
 polygon_flaeche_ungeeignet_rein <- fl_wid_kat_alle %>%
   filter(kategorie == "wohngebiet" | kategorie == "bewohnt" | 
            kategorie == "betrieb" | kategorie == "gewaeser" | 
@@ -555,20 +635,19 @@ st_write(polygon_flaeche_geeignet, "daten_zwischenablage/polygon_flaeche_geeigne
 polygon_flaeche_geeignet <- st_read("/vsicurl/https://raw.githubusercontent.com/tyls-27/solar_salzburg/master/daten_zwischenablage/polygon_flaeche_geeignet.shp")
 ```
 
-
 ## Auswählen von tauglichen Landbedeckungstypen
+
 ```{r, include = FALSE}
 # load in landcover data for Salzburg
 lc_sbg <- rast("daten_zwischenablage/lc_sbg.tif")
 ```
-
 
 ```{r}
 #### ----------------------------- Land Cover ----------------------------- ####
 # 10 - Tree Cover
 # 20 - Shrublands # suitable
 # 30 - Grassland # suitable
-# 40 - Cropland # suitable (try with and without)
+# 40 - Cropland # suitable 
 # 50 - Built-up
 # 60 - Bare/sparse vegetation # suitable
 # 70 - Snow and ice
@@ -591,14 +670,19 @@ lc_geeignet <- rast("daten_zwischenablage/lc_geeignet.tif")
 ```
 
 ## Topographische Kriterien
-```{r}
-#### ----------------------------- Topography ----------------------------- ####
 
+```{r, include=FALSE}
 # load in dgm
 dgm <- rast("daten_zwischenablage/dgm.tif")
+```
 
+```{r}
+#### ----------------------------- Topography ----------------------------- 
+
+# mask the digital elevation model to the appropriate areas as determined by the combined polygon buffers (polygon_flaeche_geeignet)
 dgm_geeignet_fl <- mask(dgm, polygon_flaeche_geeignet)
 
+# set all cells above 1500 m in dgm_geeignet_fl to NA
 dgm_geeignet <- terra::clamp(dgm_geeignet_fl, upper=1500, value=FALSE)
 ```
 
@@ -607,50 +691,68 @@ writeRaster(dgm_geeignet, "daten_zwischenablage/dgm_geeignet.tif")
 ```
 
 ```{r}
-# calculate aspect from the dsm
+# calculate aspect from the digital elevation model
 terra::terrain(dgm, v="aspect", neighbors=8, unit="degrees", filename="daten_zwischenablage/hangrichtung.tif", overwrite = T)
 
-# calculate slope from dsm
+# calculate slope from digital elevation model
 terra::terrain(dgm, v="slope", neighbors=8, unit="degrees", filename="daten_zwischenablage/hangneigung.tif", overwrite = T)
 
+# read in data for asepct
 hangausrichtung <- rast("daten_zwischenablage/hangausrichtung.tif")
+
+# read in data for slope
 hangneigung <- rast("daten_zwischenablage/hangneigung.tif")
 ```
 
 ```{r}
-# set areas with suitable gradient to 1 and rest to na
+# criteria: slope less than 15 degrees
+# mask the slope raster to the appropriate areas as determined by the combined polygon buffers (polygon_flaeche_geeignet)
 hangneigung_geeignet_fl <- terra::mask(hangneigung, polygon_flaeche_geeignet)
 
+# define values for matrix to set areas with suitable gradient (0-15 degrees) to 1 and rest to na
 hangneigung_zahl <- c(0, 15, 1)
 
+# create matrix for re-classification
 hangneigung_matr <- matrix(hangneigung_zahl, ncol=3, byrow=TRUE)
 
-hangneigung_geeignet_alle <- classify(hangneigung_geeignet_fl, hangneigung_matr, others=NA)
+# reclassify areas of suitable gradient and set other areas to NA
+hangneigung_geeignet_alle <- classify(hangneigung_geeignet_fl,
+                                      hangneigung_matr, others=NA)
 
-# 3.5 degrees as threshold 
+# define values for matrix to set areas with a gradient lower than 3.5 to 1 and rest to na (to be used in conjunction with aspect data)
 hangneigung_zahl_3_5 <- c(0, 3.5, 1)
 
+# create matrix for re-classification
 hangneigung_matr_3_5 <- matrix(hangneigung_zahl_3_5, ncol=3, byrow=TRUE)
 
-hangneigung_geeignet_unter_3_5 <- classify(hangneigung_geeignet_fl, hangneigung_matr_3_5, others=NA)
+# reclassify areas meeting gradient criteria and set other areas to NA
+hangneigung_geeignet_unter_3_5 <- classify(hangneigung_geeignet_fl,
+                                           hangneigung_matr_3_5, others=NA)
 
-# clip hangneigung_geeignet_alle with dgm
-hn_dgM_geeignet <- terra::mask(hangneigung_geeignet_alle, dgm)
+# clip hangneigung_geeignet_alle with dgm_geeignet
+hn_dgm_geeignet <- terra::mask(hangneigung_geeignet_alle, dgm_geeignet)
 ```
 
-
 ```{r}
-# set areas with suitable aspect to 1 and rest to na
-hangausrichtung_geeignet_fl <- terra::mask(hangausrichtung, polygon_flaeche_geeignet)
+# overall criteria: aspect between 110 - 200 (unless slope is less than 3.5 degrees, then aspect is not taken into account)
 
+# mask the aspect raster to the appropriate areas as determined by the combined polygon buffers (polygon_flaeche_geeignet)
+hangausrichtung_geeignet_fl <- terra::mask(hangausrichtung,
+                                           polygon_flaeche_geeignet)
+
+# define values for matrix to set areas with an aspect from 110-200 to 1 and rest to na
 hangausrichtung_zahl <- c(110, 200, 1)
 
+# create matrix for reclassification
 hangausrichtung_matr <- matrix(hangausrichtung_zahl, ncol=3, byrow=TRUE)
 
-hangausrichtung_geeignet <- classify(hangausrichtung_geeignet_fl, hangausrichtung_matr, others=NA)
+# reclassify areas meeting aspect criteria and set other areas to NA
+hangausrichtung_geeignet <- classify(hangausrichtung_geeignet_fl,
+                                     hangausrichtung_matr, others=NA)
 
-# clip with combined hangausrichtung and dgm
-hn_dgm_ha_geeignet <- terra::mask(hn_dgM_geeignet, hangausrichtung_geeignet)
+# clip with hn_dgm_geeignet
+hn_dgm_ha_geeignet <- terra::mask(hn_dgm_geeignet,
+                                  hangausrichtung_geeignet)
 ```
 
 ```{r, include = FALSE}
@@ -659,7 +761,8 @@ writeRaster(hn_dgm_ha_geeignet, "daten_zwischenablage/hn_dgm_ha_geeignet.tif")
 
 ```{r}
 # add in those areas under 3.5 degrees of gradient
-topographie_geeignet <- terra::merge(hn_dgm_ha_geeignet, hangneigung_geeignet_unter_3_5)
+topographie_geeignet <- terra::merge(hn_dgm_ha_geeignet,
+                                     hangneigung_geeignet_unter_3_5)
 ```
 
 ```{r, include = FALSE}
@@ -669,21 +772,23 @@ topographie_geeignet <- rast("daten_zwischenablage/topographie_geeignet.tif")
 
 ## Einbeziehung der Solareinstrahlung
 
+```{r, include=FALSE}
+# load in saved resampled raster
+solar_resample <- rast("daten_zwischenablage/solar_resample.tif")
+```
+
 ```{r}
 #### --------------------------- Solar Radiation -------------------------- ####
 # resample solar_raw to a lower resolution based on dgm (otherwise R does not compute)
 # also to allow for more contiguous areas - with 1x1 resolution - there would likely be very fragemetned areas
 solar_resample <- resample(solar_raw, dgm)
 
-# load in saved resampled raster
-solar_resample <- rast("daten_zwischenablage/solar_resample.tif")
-
 # set values of areas which do satisfy the 1100 kw/yr requirement to NA
 solar_geeignet <- terra::clamp(solar_resample, lower=1100, value=FALSE)
 ```
 
 ```{r, include = FALSE}
-# write 
+# write out raster
 writeRaster(solar_geeignet, "daten_zwischenablage/solar_geeignet.tif", overwrite = T)
 ```
 
@@ -700,16 +805,24 @@ writeRaster(top_solar_geeignet,"daten_zwischenablage/top_solar_geeignet.tif")
 ```
 
 ## Umwandeln zu SF zum Abbilden
+
 ```{r}
 #### --------------------------- Convert to sf ---------------------------- ####
+# topography-solar combined raster
 
-# Topography-Solar combined Raster
+# force raster to polygon
 top_solar_geeignet_vec <- as.polygons(top_solar_geeignet)
+
+# change to sf object and select only geometry
 top_solar_geeignet_vec <- st_as_sf(top_solar_geeignet_vec) %>%
   select(geometry)
 
 # lc raster
+
+# force raster to polygon
 lc_geeignet_vec <- as.polygons(lc_geeignet)
+
+# change to sf object and select only geometry
 lc_geeignet_vec <- st_as_sf(lc_geeignet_vec) %>%
   select(geometry)
 
@@ -720,112 +833,132 @@ flaeche_geeignet <- st_intersection(top_solar_geeignet_vec, lc_geeignet_vec)
 ```{r, include = FALSE}
 # write out shp
 st_write(flaeche_geeignet, "daten_zwischenablage/flaeche_geeignet.shp")
+```
 
+```{r, include = FALSE, eval=TRUE}
 # read in flaeche_geeignet
 flaeche_geeignet <- st_read("daten_zwischenablage/flaeche_geeignet.shp")
 ```
 
-## Leaflet Map (change name)
+## Solaranlage in Salzburg - Aktuell und Potenzial
 
-```{r}
-basemap <- leaflet() %>%
-  # add different provider tiles
-  addProviderTiles(
-    "OpenStreetMap",
-    # give the layer a name
-    group = "OpenStreetMap"
-  ) %>%
-  addProviderTiles(
-    "CartoDB.Positron",
-    group = "CartoDB.Positron"
-  ) %>%
-  addProviderTiles(
-    "Esri.WorldTopoMap",
-    group = "Esri.WorldTopoMap"
-  ) %>%
-  addProviderTiles(
-    "Esri.WorldImagery",
-    group = "Esri.WorldImagery"
-  ) %>%
-  addProviderTiles(
-    "Esri.WorldTerrain",
-    group = "Esri.WorldTerrain"
-  ) %>%
-  # add a layers control
-  addLayersControl(
-    baseGroups = c(
-      "OpenStreetMap","CartoDB.Positron", "Esri.WorldTopoMap",
-      "Esri.WorldImagery", "Esri.WorldTerrain"
-      ),
-    # position it on the topleft
-    position = "topleft"
-  )
+```{r, eval=TRUE}
+#### -------- Map of Potential Solar Areas and Current Solar Areas -------- ####
 
-
-basemap %>%
-  
-  addPolygons(
-  data = flaeche_geeignet,
-  # set the color of the polygon
-  color = "#E84A5F",
-  # set the opacity of the outline
-  opacity = 1,
-  # set the stroke width in pixels
-  weight = 1,
-  # set the fill opacity
-  fillOpacity = 0.6
-)
+tm_shape(flaeche_geeignet) +
+  # add yellow polygons for areas suitable for solar farms
+  tm_polygons(col= "yellow", 
+              border.col = "yellow") +
+  tm_shape(fl_wid_solar) + 
+  # add red polygons for areas suitable for solar farms
+  tm_polygons(col= "red", 
+              border.col = "red") +
+  # add borders of municipalities
+  tm_shape(gemeinden_ltw) +
+  tm_borders(col="black", 
+             lwd=2) + 
+  # add legend 
+  tm_add_legend(type = c("fill"),
+                labels = c("Geeingte Solarfläche", "Bestehende Anlagen"),
+                col = c( "yellow", "red"),
+                border.lwd = 0) +
+  # add title and format legend 
+  tm_layout(main.title = "Geeignete Solarfläche und Bestehende Solaranlagen", 
+            main.title.fontface = 2, fontfamily = "Arial",
+            main.title.size = 1.2, 
+            legend.outside = TRUE,legend.text.size = 0.75, 
+            legend.position = c("left","top"), 
+            legend.title.size = 1.5, 
+            legend.title.fontface = 1.5,
+            frame = F) + 
+  # add North arrow
+  tm_compass(type = "arrow", text.size = 0.75, size = 1.3,
+             position = c("right", "top")) + 
+  # add scale bar
+  tm_scale_bar(breaks = c(0, 10, 20, 30, 40, 50), text.size=0.75,
+               position = c(0, -0.02))+
+  # add credits
+  tm_credits("Projection: MGI / Austria GK M31\nData: Land Salzburg", 
+             fontface = "bold",
+             position = c(0.45,0),
+             size = 0.6, 
+             align = "left")
 ```
 
-
 ## Cluster und Hotspot Analyse
-```{r}
+
+```{r, eval=TRUE}
 #### ----------- Cluster Analysis and Spatial Autoceorrelation ------------ ####
 
-#### calculate the amount of solar panel area in each municipality ----
-# Function to calculate area for each polygon
-#run the intersect function, converting the output to a tibble in the process
+#### calculate the amount of suitable solar farm area in each municipality ----
+
+# find intersection of suitable solar farm  areas per municipality
 gemeinden_solar <- st_intersection(flaeche_geeignet, gemeinden_ltw)
 
+# find the area of suitable solar farm areas per municipality
 gemeinden_solar$pot_solar_flaeche <- st_area(gemeinden_solar)
 
+# convert to tibble and select just the area of the suitable solar farm areas and gkz for joining 
 gemeinden_solar_df <- as_tibble(gemeinden_solar) %>%
   select(c(gkz, pot_solar_flaeche))
 
+# join with other data on municipalities
 gemeinden_voll <- gemeinden_ltw %>%
   left_join(gemeinden_solar_df)
-``` 
+```
 
 ```{r}
 #### calculate amount of grassland per municipality ----
+
+# set the value of grassland to 1 and everything else to NA
 lc_gland <- subst(lc_sbg,c(0, 30), c(NA, 1), others=NA)
 
-# Convert SF multipolygon to terra
+# convert sf multipolygon to terra vector
 gemeinden_terra <- vect(gemeinden_voll)
 
-# Extract raster values for each polygon
-gland_pixel <- terra::extract(lc_gland, gemeinden_terra, fun = sum, na.rm = TRUE)
+# extract raster values for each polygon
+gland_pixels <- terra::extract(lc_gland, gemeinden_terra, fun = sum, 
+                               na.rm = TRUE)
 
-#write_csv(gland_pixel, "daten_zwischenablage/gland_pixel.csv")
+# add unique identifier from gemeinden_solar to extracted values
+gland_pixels$gkz <- gemeinden_voll$gkz
 
-gland_pixel <- read_csv("https://raw.githubusercontent.com/tyls-27/solar_salzburg/master/daten_zwischenablage/gland_pixel.csv")
-
-# Add unique identifier from gemeinden_solar to extracted values
-gland_pixel$gkz <- gemeinden_voll$gkz
-
-# Calculate pixel area
+# calculate pixel area
 pixel_flaeche <- prod(res(lc_gland))
 
-# Convert pixel counts to area
-gland_pixel$gruenland_flaeche <- gland_pixel$ESA_WorldCover_10m_2021_v200_N45E012_Map * pixel_flaeche
+# convert pixel counts to area
+gland_pixels$gruenland_flaeche <- gland_pixels$ESA_WorldCover_10m_2021_v200_N45E012_Map * pixel_flaeche
 
 # add units to gland_pixel$gruenland_flaeche
-gland_pixel$gruenland_flaeche <- set_units(gland_pixel$gruenland_flaeche,
+gland_pixels$gruenland_flaeche <- set_units(gland_pixels$gruenland_flaeche,
+                                            "m^2") 
+
+# combine the extracted values with the data on the municipalities
+gemeinden_voll <- gemeinden_voll %>%
+  left_join(gland_pixels[, c("gkz", "gruenland_flaeche")], by = "gkz")
+```
+
+```{r, include=FALSE, eval=TRUE}
+#### calculate amount of grassland per municipality ----
+
+gland_pixels <- read_csv("https://raw.githubusercontent.com/tyls-27/solar_salzburg/master/daten_zwischenablage/gland_pixels.csv")
+
+# Add unique identifier from gemeinden_solar to extracted values
+gland_pixels$gkz <- gemeinden_voll$gkz
+
+# Calculate pixel area
+pixel_flaeche <- prod(res(lc_sbg))
+
+# Convert pixel counts to area
+gland_pixels$gruenland_flaeche <- gland_pixels$ESA_WorldCover_10m_2021_v200_N45E012_Map * pixel_flaeche
+
+# add units to gland_pixel$gruenland_flaeche
+gland_pixels$gruenland_flaeche <- set_units(gland_pixels$gruenland_flaeche,
                                           "m^2") 
 
 # Combine the extracted values with the data on the municipalities
 gemeinden_voll <- gemeinden_voll %>%
-  left_join(gland_pixel[, c("gkz", "gruenland_flaeche")], by = "gkz")
+  left_join(gland_pixels[, c("gkz", "gruenland_flaeche")], by = "gkz")
 ```
 
 ```{r}
@@ -834,7 +967,7 @@ gemeinden_voll <- gemeinden_voll %>%
 # initiate vector to store data on populated area per municipality
 bewohnte_flaeche_pro_gemeinde <- c()
 
-# Calculate the populated area within each municipality
+# calculate the populated area within each municipality
 for (i in 1:nrow(gemeinden_voll)) { 
   
   bewohnte_flaeche_pro_gemeinde[i] <- st_intersection(fl_wid_bewohnt, gemeinden_voll$geometry[i]) %>%
@@ -845,85 +978,134 @@ for (i in 1:nrow(gemeinden_voll)) {
 # add this to gemeinden_voll
 gemeinden_voll <- gemeinden_voll %>%
   add_column(bewohnte_flaeche = bewohnte_flaeche_pro_gemeinde)
+
+# add units of metres squared
+gemeinden_voll$bewohnte_flaeche <-  set_units(gemeinden_voll$bewohnte_flaeche,"m^2")
 ```
 
 ```{r}
 #### Calculate amount of mountain area per municipality ----
-dgm_1500 <- terra::clamp(dgm, lower=1500, value=FALSE)
 
-# Convert SF multipolygon to terra
-dgm_terra <- terra::vect(gemeinden_voll)
+# define values for matrix to set areas above 1500 m to 1 and rest to na
+dgm_1500_zahl <- c(1500, Inf, 1)
+
+# create matrix for re-classification
+dgm_1500_matr <- matrix(dgm_1500_zahl, ncol=3, byrow=TRUE)
+
+# reclassify areas under 1500 m to NA
+dgm_1500 <- classify(dgm, dgm_1500_matr, others=NA)
+
+# extract raster values for each polygon
+dgm_pixels <- terra::extract(dgm_1500, gemeinden_terra, fun = sum, na.rm = TRUE)
+
+# add unique identifier from gemeinden_voll to extracted values
+dgm_pixels$gkz <- gemeinden_voll$gkz
+
+# calculate pixel area
+pixel_flaeche <- prod(res(dgm_1500))
+
+# convert pixel counts to area
+dgm_pixels$berg_flaeche <- dgm_pixels$dgm5m * pixel_flaeche
+
+# add units to gland_pixel$berg_flaeche
+dgm_pixels$berg_flaeche <- set_units(dgm_pixels$berg_flaeche,
+                                    "m^2") 
+# replace na values with 0
+dgm_pixels$berg_flaeche[is.na(dgm_pixels$berg_flaeche)] <- 0
+
+# combine the extracted values with the data on the municipalities
+gemeinden_voll <- gemeinden_voll %>%
+  left_join(dgm_pixels[, c("gkz", "berg_flaeche")], by = "gkz")
+```
+
+```{r, include=FALSE, eval=TRUE}
+#### Calculate amount of mountain area per municipality ----
+dgm_1500_zahl <- c(1500, Inf, 1)
+
+dgm_1500_matr <- matrix(dgm_1500_zahl, ncol=3, byrow=TRUE)
+
+dgm_1500 <- classify(dgm, dgm_1500_matr, others=NA)
+
+# writeRaster(dgm_1500,"daten_zwischenablage/dgm_1500.tif", overwrite=TRUE)
 
 # Extract raster values for each polygon
-dgm_pixel <- terra::extract(dgm_1500, dgm_terra, fun = sum, na.rm = TRUE)
+dgm_pixels <- terra::extract(dgm_1500, gemeinden_terra, fun = sum, na.rm = TRUE)
 
-#write_csv(dgm_pixel, "daten_zwischenablage/dgm_pixel.csv")
+#write_csv(dgm_pixels, "daten_zwischenablage/dgm_pixels.csv")
 
-dgm_pixel <- read_csv("https://raw.githubusercontent.com/tyls-27/solar_salzburg/master/daten_zwischenablage/dgm_pixel.csv")
+dgm_pixels <- read_csv("https://raw.githubusercontent.com/tyls-27/solar_salzburg/master/daten_zwischenablage/dgm_pixels.csv")
 
 # Add unique identifier from gemeinden_solar to extracted values
-dgm_pixel$gkz <- gemeinden_voll$gkz
+dgm_pixels$gkz <- gemeinden_voll$gkz
 
 # Calculate pixel area
 pixel_flaeche <- prod(res(dgm_1500))
 
 # Convert pixel counts to area
-dgm_pixel$berg_flaeche <- dgm_pixel$dgm5m * pixel_flaeche
+dgm_pixels$berg_flaeche <- dgm_pixels$dgm5m * pixel_flaeche
 
 # add units to gland_pixel$gruenland_flaeche
-dgm_pixel$berg_flaeche <- set_units(dgm_pixel$berg_flaeche,
+dgm_pixels$berg_flaeche <- set_units(dgm_pixels$berg_flaeche,
                                     "m^2") 
 # replace na values with 0
-dgm_pixel$berg_flaeche[is.na(dgm_pixel$berg_flaeche)] <- 0
+dgm_pixels$berg_flaeche[is.na(dgm_pixels$berg_flaeche)] <- 0
 
 # Combine the extracted values with the data on the municipalities
 gemeinden_voll <- gemeinden_voll %>%
-  left_join(dgm_pixel[, c("gkz", "berg_flaeche")], by = "gkz")
+  left_join(dgm_pixels[, c("gkz", "berg_flaeche")], by = "gkz")
 ```
 
-```{r}
-#### Calculate proportions of appropriate solar areas, grassland and populated areas per municipality in terms of their total area ----
+```{r, eval=TRUE}
+#### Calculate proportions of appropriate solar farm areas, grassland and populated areas per municipality in terms of their total area ----
 
 gemeinden_data <- gemeinden_voll %>%
+  # calculate area of each municipality and mutate to tibble
   mutate(flaeche = st_area(geometry)) %>%
-  mutate(solar_anteil = as.numeric(pot_solar_flaeche)/as.numeric(flaeche) * 100,
-         gruenland_anteil = as.numeric(gruenland_flaeche)/as.numeric(flaeche) * 100,
+  # calculate the percentage of potential solar farm, grassland, populated and mountain areas per municipality and mutate it to tibble
+  mutate(solar_anteil = 
+           as.numeric(pot_solar_flaeche)/as.numeric(flaeche) * 100,
+         gruenland_anteil =
+           as.numeric(gruenland_flaeche)/as.numeric(flaeche) * 100,
          bewohnt_anteil = as.numeric(bewohnte_flaeche)/as.numeric(flaeche) * 100,
          berg_anteil = as.numeric(berg_flaeche)/as.numeric(flaeche)) %>%
+  # remove the shape_area and shape_len columns
   dplyr::select(-c(shape_area, shape_len)) %>%
+  # rearrange order of columns 
   relocate(geometry, .after = last_col()) %>%
   relocate(solar_anteil, .after = pot_solar_flaeche) %>%
   relocate(gruenland_anteil, .after = gruenland_flaeche) %>%
   relocate(bewohnt_anteil, .after = bewohnte_flaeche) %>%
   relocate(berg_anteil, .after = berg_flaeche) %>%
+  # calculate the population density in km2 and mutate to tibble
+  mutate(einwohnerzahl_pro_qkm = bev?lkerung/as.numeric(set_units(flaeche, "km^2")), .after = bevölkerung) %>%
+  # transform back to sf object
   st_as_sf()
 ```
 
 ### Hotspot Analyse und Räumliche Autocorrelation
-```{r}
-#### Spatial autocorrelation ----
-#### Calculate spatial autocorrelation of solar areas
-#create centroids and join neighbours within 20,000 m so that every dsitrict
-#has a neighbour
-gemeinde_zentroide <- gemeinden_data %>% 
-  st_centroid()
-gemeinde_nachbarn <- dnearneigh(st_geometry(st_centroid(gemeinden_data)), 0, 20000)
 
+```{r, eval=TRUE}
+#### Spatial autocorrelation ----
+
+#### Calculate spatial autocorrelation of potential solar farm areas, grassland, populated areas and mountainous areas
+
+#create centroids and join neighbours within 20,000 m so that every municipality has a neighbour
+gemeinde_nachbarn <- dnearneigh(st_geometry(st_centroid(gemeinden_data)), 0, 20000)
 
 # create a neighbours list
 gemeinde_nachbarn_gewichte<- gemeinde_nachbarn %>% 
   nb2listw(., style = "B")
 
-# plot neighbours: fixed distance
-plot(gemeinde_nachbarn_gewichte, st_geometry(gemeinde_zentroide), col = "green", pch = 20, cex = 0.5)
+# create sf df with centroids of each municipality
+gemeinde_zentroide <- gemeinden_data %>% 
+  st_centroid()
 
-# create a colour palette for autocorrelation maps
-GIFarben <- rev(brewer.pal(8, "RdBu"))
+# plot neighbours using centroids
+plot(gemeinde_nachbarn_gewichte, st_geometry(gemeinde_zentroide), col = "green", pch = 20, cex = 0.5)
 ```
 
-```{r}
+```{r, eval=TRUE}
 #create GI-Statistics for absolute values on potential solar farm areas
-
 GI_solar_absolut <- gemeinden_data %>%
   pull(pot_solar_flaeche) %>%
   as.vector()%>%
@@ -931,57 +1113,27 @@ GI_solar_absolut <- gemeinden_data %>%
   as.numeric()
 
 #create GI-Statistics for relative values on potential solar farm areas
-
 GI_solar_relativ <- gemeinden_data %>%
   pull(solar_anteil) %>%
   as.vector()%>%
   localG(., gemeinde_nachbarn_gewichte) %>%
   as.numeric()
 
-
-#create GI-Statistics for absolute values on grassland areas
-
-GI_gland_absolut <- gemeinden_data %>%
-  pull(gruenland_flaeche) %>%
-  as.vector()%>%
-  localG(., gemeinde_nachbarn_gewichte) %>%
-  as.numeric()
-
 #create GI-Statistics for relative values on grassland areas
-
 GI_gland_relativ <- gemeinden_data %>%
   pull(gruenland_anteil) %>%
   as.vector()%>%
   localG(., gemeinde_nachbarn_gewichte) %>%
   as.numeric()
 
-
-#create GI-Statistics for absolute values on grassland areas
-
-GI_bewohnt_absolut <- gemeinden_data %>%
-  pull(bewohnte_flaeche) %>%
-  as.vector()%>%
-  localG(., gemeinde_nachbarn_gewichte) %>%
-  as.numeric()
-
-#create GI-Statistics for relative values on grassland areas
-
+#create GI-Statistics for relative values on populated areas
 GI_bewohnt_relativ <- gemeinden_data %>%
   pull(bewohnt_anteil) %>%
   as.vector()%>%
   localG(., gemeinde_nachbarn_gewichte) %>%
   as.numeric()
 
-#create GI-Statistics for absolute values on mountain areas
-
-GI_berg_absolut <- gemeinden_data %>%
-  pull(berg_flaeche) %>%
-  as.vector()%>%
-  localG(., gemeinde_nachbarn_gewichte) %>%
-  as.numeric()
-
 #create GI-Statistics for relative values on mountain areas
-
 GI_berg_relativ <- gemeinden_data %>%
   pull(berg_anteil) %>%
   as.vector()%>%
@@ -989,73 +1141,488 @@ GI_berg_relativ <- gemeinden_data %>%
   as.numeric()
 ```
 
-```{r}
+```{r, eval=TRUE}
 # join the local Gi* statistics to the names, gkz and geometry column of the gemeinden_data spatial dataframe
 gemeinden_GI <- gemeinden_data %>% 
   select(c(1,2,5, 23:30)) %>%
   add_column(gi_solar_absolut = GI_solar_absolut,
          gi_solar_relativ = GI_solar_relativ,
-         gi_gland_absolut = GI_gland_absolut,
          gi_gland_relativ = GI_gland_relativ,
-         gi_bewohnt_absolut = GI_bewohnt_absolut,
          gi_bewohnt_relativ = GI_bewohnt_relativ,
-         gi_berg_absolut = GI_berg_absolut,
          gi_berg_relativ = GI_berg_relativ) %>%
-  relocate(geometry, .after = last_col()) %>%
-  st_as_sf()
+  relocate(geometry, .after = last_col()) %>% 
+  st_as_sf() 
+ 
+# Convert units to kn^2 of potential solar farm areas
+gemeinden_GI$pot_solar_flaeche <- set_units(gemeinden_GI$pot_solar_flaeche, "km^2") 
 ```
 
-```{r}
-#### Hotspot Maps
+```{r, eval=TRUE}
+#### Chloropeth Maps and GI Maps
 
+# create colour palettes for chloropeth maps
+solar_palette <- rev(heat.colors(8))
+gland_palette <- brewer.pal(8, "Greens")
+bewohnt_palette <- brewer.pal(8, "Blues")
+berg_palette <- brewer.pal(8, "Greys")
 
+# create a color ramp function
+farben_hotspot <- colorRampPalette(c("blue", "white","red"))
+
+# create a colour palette for autocorrelation maps
+GIFarben <- farben_hotspot(13)
 ```
 
+```{r, eval=TRUE}
+# solar absolute - chloropeth
+tm_shape(gemeinden_GI) +
+  # fill the geometries using the solar_palette to reflect the amount of suitable solar areas in each municipality
+  tm_fill("pot_solar_flaeche", 
+          title = "Fläche (Quadratlkilometer)",
+          style = "pretty",
+          textNA = "No data",
+          colorNA = "white", 
+          palette = solar_palette, border.col = "black")+
+  # add borders of the municipalities
+  tm_borders(col="black", 
+             lwd=2) + 
+  # add legend and title
+  tm_layout(main.title = "Geeignete Solarfläche", 
+            main.title.fontface = 2,fontfamily = "Arial",main.title.size =
+              1.2, 
+            legend.outside = TRUE,legend.text.size = 0.75, 
+            legend.position = c("left","top"), 
+            legend.title.size = 1.5, 
+            legend.title.fontface = 1.5, 
+            frame = F,
+            legend.format = list(text.separator="-")) + 
+  # add North arrow
+  tm_compass(type = "arrow", text.size = 0.75, size = 1.3,
+             position = c("right", "top")) + 
+  # add scale bar
+  tm_scale_bar(breaks = c(0, 10, 20, 30, 40, 50), text.size=0.75,
+               position = c(0, -0.02))+
+  # add credits
+  tm_credits("Projection: MGI / Austria GK M31\nData: Land Salzburg", 
+             fontface = "bold",
+             position = c(0.45,0),
+             size = 0.6, 
+             align = "left")
+
+# Solar absolute - GI Map
+tm_shape(gemeinden_GI) +
+  # fill the geometries using the GIFarben to reflect the spatial hotspots of suitable solar areas (absolute) per municipality based on z-number derived from Getis-Ord (GI*) 
+  tm_fill("gi_solar_absolut", 
+          title = "Gi (Z-Wert)",
+          style = "fixed", 
+          breaks = c(-3, -2, -1, 0, 1, 2, 3, 4, 5, 6),
+          midpoint = 0,
+          textNA = "No data",
+          colorNA = "white", 
+          palette = GIFarben, border.col = "black")+
+    # add borders of the municipalities
+  tm_borders(col="black", 
+             lwd=2) + 
+  # add legend and title
+  tm_layout(main.title = "Geeignete Solarfläche (absolut) - Hotspot Analyse", 
+            main.title.fontface = 2,fontfamily = "Arial",main.title.size =
+              1.2, 
+            legend.outside = TRUE, legend.text.size = 0.75, 
+            legend.position = c("left","top"), 
+            legend.title.size = 1.5, 
+            legend.title.fontface = 1.5, 
+            frame = F) + 
+  # add North arrow
+  tm_compass(type = "arrow", text.size = 0.75, size = 1.3,
+             position = c("right", "top")) + 
+  # add scale bar
+  tm_scale_bar(breaks = c(0, 10, 20, 30, 40, 50), text.size=0.75,
+               position = c(0, -0.02))+
+  tm_shape(gemeinden_GI) + 
+  tm_borders(col="black", lwd=2) +
+  # add credits
+  tm_credits("Projection: MGI / Austria GK M31\nData: Land Salzburg", 
+             fontface = "bold",
+             position = c(0.45,0),
+             size = 0.6, 
+             align = "left")
+```
+
+```{r, eval=TRUE}
+# Solar relative - chloropeth map
+tm_shape(gemeinden_GI) +
+  # fill the geometries using the solar_palette to reflect the percentage of land that is suitable for solar farms in each municipality
+  tm_fill("solar_anteil", 
+          title = "Abdeckung pro Gemeinde (%)",
+          style = "jenks",
+          textNA = "No data",
+          colorNA = "white", 
+          palette = solar_palette, border.col = "black")+
+  # add borders of the municipalities
+  tm_borders(col="black", 
+             lwd=2) + 
+  # add legend and title
+  tm_layout(main.title = "Geeignete Solarfläche (Relativ)", 
+            main.title.fontface = 2,fontfamily = "Arial",main.title.size =
+              1.2, 
+            legend.outside = TRUE,legend.text.size = 0.75, 
+            legend.position = c("left","top"), 
+            legend.title.size = 1.5, 
+            legend.title.fontface = 1.5, 
+            frame = F,
+            legend.format = list(text.separator="-")) + 
+  # add North arrow
+  tm_compass(type = "arrow", text.size = 0.75, size = 1.3,
+             position = c("right", "top")) + 
+  # add scale bar
+  tm_scale_bar(breaks = c(0, 10, 20, 30, 40, 50), text.size=0.75,
+               position = c(0, -0.02))+
+  # add credits
+  tm_credits("Projection: MGI / Austria GK M31\nData: Land Salzburg", 
+             fontface = "bold",
+             position = c(0.45,0),
+             size = 0.6, 
+             align = "left")
+
+# Solar relative - GI Map
+tm_shape(gemeinden_GI) +
+  # fill the geometries using the GIFarben to reflect the spatial hotspots of the proportion of suitable solar areas per municipality based on z-number derived from Getis-Ord (GI*) 
+  tm_fill("gi_solar_relativ", 
+          title = "Gi (Z-Wert)",
+          style = "fixed", 
+          breaks = c(-3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9),
+          midpoint = 0,
+          textNA = "No data",
+          colorNA = "white", 
+          palette = GIFarben, border.col = "black")+
+  # add borders of the municipalities
+  tm_borders(col="black", 
+             lwd=2) + 
+  # add legend and title
+  tm_layout(main.title = "Geeignete Solarfläche (relativ) - Hotspot Analyse", 
+            main.title.fontface = 2,fontfamily = "Arial",main.title.size =
+              1.2, 
+            legend.outside = TRUE,legend.text.size = 0.75, 
+            legend.position = c("left","top"), 
+            legend.title.size = 1.5, 
+            legend.title.fontface = 1.5,
+            frame = F) + 
+  # add North arrow
+  tm_compass(type = "arrow", text.size = 0.75, size = 1.3,
+             position = c("right", "top")) + 
+  # add scale bar
+  tm_scale_bar(breaks = c(0, 10, 20, 30, 40, 50), text.size=0.75,
+               position = c(0, -0.02))+
+  # add credits
+  tm_credits("Projection: MGI / Austria GK M31\nData: Land Salzburg", 
+             fontface = "bold",
+             position = c(0.45,0),
+             size = 0.6, 
+             align = "left")
+```
+
+```{r, eval=TRUE}
+# Grassland relative - chloropeth map
+tm_shape(gemeinden_GI) +
+  # fill the geometries using the gland_palette to reflect the percentage of grassland cover in each municipality
+  tm_fill("gruenland_anteil", 
+          title = "Abdeckung pro Gemeinde (%)",
+          style = "pretty",
+          textNA = "No data",
+          colorNA = "white", 
+          palette = gland_palette, border.col = "black")+
+  # add municipality borders
+  tm_borders(col="black", 
+             lwd=2) + 
+  # add legend and title 
+  tm_layout(main.title = "Grünland (Relativ)", 
+            main.title.fontface = 2,fontfamily = "Arial",main.title.size =
+              1.2, 
+            legend.outside = TRUE,legend.text.size = 0.75, 
+            legend.position = c("left","top"), 
+            legend.title.size = 1.5, 
+            legend.title.fontface = 1.5, 
+            frame = F,
+            legend.format = list(text.separator="-")) + 
+  # add North arrow
+  tm_compass(type = "arrow", text.size = 0.75, size = 1.3,
+             position = c("right", "top")) + 
+  # add scale bar
+  tm_scale_bar(breaks = c(0, 10, 20, 30, 40, 50), text.size=0.75,
+               position = c(0, -0.02))+
+  # add credits
+  tm_credits("Projection: MGI / Austria GK M31\nData: ESA, Land Salzburg", 
+             fontface = "bold",
+             position = c(0.45,0),
+             size = 0.6, 
+             align = "left")
+
+# Grassland - GI map
+tm_shape(gemeinden_GI) +
+  # fill the geometries using the GIFarben to reflect the spatial hotspots of the proportion of grassland cover per municipality based on z-number derived from Getis-Ord (GI*) 
+  tm_fill("gi_gland_relativ", 
+          title = "Gi (Z-Wert)",
+          style = "fixed", 
+          breaks = c(-4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7),
+          midpoint = 0,
+          textNA = "No data",
+          colorNA = "white", 
+          palette = GIFarben, border.col = "black")+
+  # add municipality borders
+  tm_borders(col="black", 
+             lwd=2) + 
+  # add legend and title
+  tm_layout(main.title = "Grünland - Hotspot Analyse", 
+            main.title.fontface = 2,fontfamily = "Arial",main.title.size =
+              1.2, 
+            legend.outside = TRUE,legend.text.size = 0.75, 
+            legend.position = c("left","top"), 
+            legend.title.size = 1.5, 
+            legend.title.fontface = 1.5, 
+            frame = F) + 
+  # add North arrow
+  tm_compass(type = "arrow", text.size = 0.75, size = 1.3,
+             position = c("right", "top")) + 
+  # add scale bar
+  tm_scale_bar(breaks = c(0, 10, 20, 30, 40, 50), text.size=0.75,
+               position = c(0, -0.02))+
+  # add credits
+  tm_credits("Projection: MGI / Austria GK M31\nData: ESA, Land Salzburg",
+             fontface = "bold",
+             position = c(0.45,0),
+             size = 0.6, 
+             align = "left")
+```
+
+```{r, eval=TRUE}
+# Populated relative - chloropeth map
+tm_shape(gemeinden_GI) +
+  # fill the geometries using the bewohnt_palette to reflect the percentage of populated land in each municipality
+  tm_fill("bewohnt_anteil", 
+          title = "Abdeckung pro Gemeinde (%)",
+          style = "jenks",
+          textNA = "No data",
+          colorNA = "white", 
+          palette = bewohnt_palette, border.col = "black")+
+  # add municipality borders
+  tm_borders(col="black", 
+             lwd=2) + 
+  # add legend and title
+  tm_layout(main.title = "Bewohnt (Relativ)", 
+            main.title.fontface = 2,fontfamily = "Arial",main.title.size = 1.2, 
+            legend.outside = TRUE,legend.text.size = 0.75, 
+            legend.position = c("left","top"), 
+            legend.title.size = 1.5, 
+            legend.title.fontface = 1.5, 
+            frame = F,
+            legend.format = list(text.separator="-")) + 
+  # add North arrow
+  tm_compass(type = "arrow", text.size = 0.75, size = 1.3,
+             position = c("right", "top")) + 
+  # add scale bar
+  tm_scale_bar(breaks = c(0, 10, 20, 30, 40, 50), text.size=0.75,
+               position = c(0, -0.02))+
+  # add credits
+  tm_credits("Projection: MGI / Austria GK M31\nData: Land Salzburg", 
+             fontface = "bold",
+             position = c(0.45,0),
+             size = 0.6, 
+             align = "left")
+
+# Populated areas - GI map
+tm_shape(gemeinden_GI) +
+    # fill the geometries using the GIFarben to reflect the spatial hotspots of the proportion of populated area per municipality based on z-number derived from Getis-Ord (GI*) 
+  tm_fill("gi_bewohnt_relativ", 
+          title = "Gi (Z-Wert)",
+          style = "fixed",
+          breaks = c(-2, -1, 0, 1, 2, 3, 4, 5, 6),
+          midpoint = 0,
+          textNA = "No data",
+          colorNA = "white", 
+          palette = GIFarben, border.col = "black")+
+  # add municipality borders 
+  tm_borders(col="black", 
+             lwd=2) +
+  # add legend and title
+  tm_layout(main.title = "Bewohnte Gebiete - Hotspot Analyse", 
+            main.title.fontface = 2,fontfamily = "Arial",main.title.size =
+              1.2, 
+            legend.outside = TRUE,legend.text.size = 0.75, 
+            legend.position = c("left","top"), 
+            legend.title.size = 1.5, 
+            legend.title.fontface = 1.5, 
+            frame = F) + 
+  # add North arrow
+  tm_compass(type = "arrow", text.size = 0.75, size = 1.3,
+             position = c("right", "top")) + 
+  # add scale bar
+  tm_scale_bar(breaks = c(0, 10, 20, 30, 40, 50), text.size=0.75,
+               position = c(0, -0.02))+
+  # add credits
+  tm_credits("Projection: MGI / Austria GK M31\nData: Land Salzburg", 
+             fontface = "bold",
+             position = c(0.45,0),
+             size = 0.6, 
+             align = "left")
+```
+
+```{r, eval=TRUE}
+# Mountains relative - chloropeth map
+tm_shape(gemeinden_GI) +
+    # fill the geometries using the berg_palette to reflect the percentage of mountainous area (> 1500 m) in each municipality
+  tm_fill("berg_anteil", 
+          title = "Abdeckung pro Gemeinde (%)",
+          style = "pretty",
+          textNA = "No data",
+          colorNA = "white", 
+          palette = berg_palette, border.col = "black")+
+  # add municipality borders
+  tm_borders(col="black", 
+             lwd=2) + 
+  # add legend and title
+  tm_layout(main.title = "Berge (Relativ)", 
+            main.title.fontface = 2,fontfamily = "Arial",main.title.size =
+              1.2, 
+            legend.outside = TRUE,legend.text.size = 0.75, 
+            legend.position = c("left","top"), 
+            legend.title.size = 1.5, 
+            legend.title.fontface = 1.5, 
+            frame = F,
+            legend.format = list(text.separator="-")) + 
+  # add North arrow
+  tm_compass(type = "arrow", text.size = 0.75, size = 1.3,
+             position = c("right", "top")) + 
+  # add scale bar
+  tm_scale_bar(breaks = c(0, 10, 20, 30, 40, 50), text.size=0.75,
+               position = c(0, -0.02))+
+  tm_shape(gemeinden_GI) + 
+  tm_borders(col="black", lwd=2) +
+  # add credits
+  tm_credits("Projection: MGI / Austria GK M31\nData: ESA, Land Salzburg", 
+             fontface = "bold",
+             position = c(0.45,0),
+             size = 0.6, 
+             align = "left")
+
+# Mountainous areas - GI map
+tm_shape(gemeinden_GI) +
+    # fill the geometries using the GIFarben to reflect the spatial hotspots of the proportion of mountainous area (> 1500 m) per municipality based on z-number derived from Getis-Ord (GI*) 
+  tm_fill("gi_berg_relativ", 
+          title = "Gi (Z-Wert)",
+          style = "fixed", 
+          breaks = c(-7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5),
+          midpoint = 0,
+          textNA = "No data",
+          colorNA = "white", 
+          palette = GIFarben, border.col = "black")+
+  # add municipality borders
+  tm_borders(col="black", lwd=2) +
+  # add legend and title
+  tm_layout(main.title = "Berge - Hotspot Analyse", 
+            main.title.fontface = 2,fontfamily = "Arial",main.title.size =
+              1.2, 
+            legend.outside = TRUE,legend.text.size = 0.75, 
+            legend.position = c("left","top"), 
+            legend.title.size = 1.5, 
+            legend.title.fontface = 1.5, 
+            frame = F) + 
+  # add North arrow
+  tm_compass(type = "arrow", text.size = 0.75, size = 1.3,
+             position = c("right", "top")) + 
+  # add scale bar
+  tm_scale_bar(breaks = c(0, 10, 20, 30, 40, 50), text.size=0.75,
+               position = c(0, -0.02))+
+  # add credits
+  tm_credits("Projection: MGI / Austria GK M31\nData: Land Salzburg", 
+             fontface = "bold",
+             position = c(0.45,0),
+             size = 0.6, 
+             align = "left")
+```
 
 ### Cluster Analyse
-```{r}
+
+```{r, eval=TRUE}
 #### Cluster analysis ----
 
-#remove total population and birth data split by EU, rest of Europe, 
-#rest of the world and other countries columns, and also only retain data
-#for top 3 parties for analysis and standardise data for clustering
-
+# select municipality name, gkz, population and relative coverage columns
 gemeinden_clus <- gemeinden_data %>% 
   as_tibble() %>%
-  dplyr::select(c(1:3, 24, 26, 28, 30, 32)) %>%
-  mutate_at(c(3:7), ~(scale(.) %>% as.vector)) %>%
-  column_to_rownames("gemeindename")# need to convert to sf before plotting
+  dplyr::select(c(1:2, 4, 25, 27, 29, 31, 33)) %>%
+  # scale clustering columns
+  mutate_at(c(3:7), ~(scale(.) %>% as.vector)) %>% 
+  # rename rows as municipality names
+  column_to_rownames("gemeindename") 
 ```
 
-```{r}
-#calculate gap statistic based on number of clusters
-gap_stat <- clusGap(gemeinden_clus[,2:6],
-                    FUN = kmeans,
-                    nstart = 25,
-                    K.max = 10,
-                    B = 50)
+```{r, eval=TRUE}
+# use elbow method to determine number of clusters
+fviz_nbclust(gemeinden_clus[,2:6], kmeans, method = "wss")
+```
 
-#plot number of clusters vs. gap statistic to determine cluster size #also fits
-#well with number of parties being analysed
-fviz_gap_stat(gap_stat)
+```{r, eval=TRUE}
+# create clusters based on elbow method - 3 clusters
+clusters <- kmeans(gemeinden_clus[,2:6], centers=3, nstart=25)
 
-fviz_nbclust(gemeinden_clus[,2:6], kmeans, method = "silhouette")
-
-clusters <- kmeans(gemeinden_clus[,2:6], centers=4, nstart=25)
-
+# view cluster features
 clusters
+```
 
+```{r, eval=TRUE}
+# visualise clusters graphically - maybe don't need when have map?
 fviz_cluster(clusters, data = gemeinden_clus[,2:6])
+```
 
+```{r, eval=TRUE}
+# Mapping clusters
+
+# Add clusters to gemeinden_clus df
 gemeinden_clus <- gemeinden_clus %>%
   mutate(cluster = clusters$cluster, .after = berg_anteil) %>%
-  st_as_sf()
+  st_as_sf() # force to sf for plotting
+
+# plotting code
+tm_shape(gemeinden_clus) + 
+  # fill geometries based on the cluster assigned
+  tm_fill(col = "cluster", 
+          style = "cat", 
+          palette = c("orange", "navy", "whitesmoke"),
+          legend.show = F) + 
+  # add municipality borders
+  tm_borders(col = "black", 
+             lwd = 2) +
+  # add legend
+  tm_add_legend(col = c("Orange", "darkblue", "grey"), 
+                labels = c("1", "2", "3"),
+                title = "Clusters") +
+  # add title
+  tm_layout(main.title = "Merkmale der Gemeinden", 
+            main.title.fontface = 2,fontfamily = "Arial",main.title.size =
+              1.2, 
+            legend.outside = TRUE,legend.text.size = 0.75, 
+            legend.position = c("left","top"), 
+            legend.title.size = 1.5, 
+            legend.title.fontface = 1.5, 
+            frame = F) + 
+  # add North arrow
+  tm_compass(type = "arrow", text.size = 0.75, size = 1.3,
+             position = c("right", "top")) + 
+  # add scale bar
+  tm_scale_bar(breaks = c(0, 10, 20, 30, 40, 50), text.size=0.75,
+               position = c(0, -0.02))+
+  # add credits
+  tm_credits("Projection: MGI / Austria GK M31\nData: Land Salzburg", 
+             fontface = "bold",
+             position = c(0.45,0),
+             size = 0.6, 
+             align = "left")
 ```
 
-```{r}
-#### Statistically explore the relationship between these variables
+```{r, eval=TRUE}
+#### Statistically explore the relationship between these variables ----
+
 # build a linear model based
-fit <- lm(solar_anteil ~ gruenland_anteil + bewohnt_anteil + berg_anteil + bevölkerung, gemeinden_data)
+fit <- lm(solar_anteil ~ gruenland_anteil + bewohnt_anteil + berg_anteil + einwohnerzahl_pro_qkm, gemeinden_data)
 
 # look at fit of linear model
 summary(fit)

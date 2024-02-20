@@ -57,7 +57,8 @@ bezirke$GKZ <- as.numeric(bezirke$GKZ)
 
 # combine with spatial df on Gemeinde - join information on counties
 bezirk_list <- gem_grenz_raw %>%
-  left_join(dplyr::select(as_tibble(bezirke), "PB", "GKZ"), by = c("GEMNR" = "GKZ")) %>%
+  left_join(dplyr::select(as_tibble(bezirke), "PB", "GKZ"), 
+            by = c("GEMNR" = "GKZ")) %>%
   distinct(GEMNR, .keep_all = TRUE) %>%
   mutate(PB = case_when(
     PB == "Salzburg-Umgebung" ~ "Flachgau",
@@ -130,7 +131,7 @@ sbg_karte <-tm_shape(bezirk_grenz) +
   tm_scale_bar(breaks = c(0, 10, 20, 30, 40, 50), text.size=0.75,
                position = c(0, -0.02))+
   # add credits
-  tm_credits("Projection: MGI / Austria GK M31\nData: Land Salzburg, OGD Österreich, ESRI", 
+  tm_credits("Projection: MGI / Austria GK M31\nData: Land Salzburg, OGD ?sterreich, ESRI", 
              fontface = "bold",
              position = c(0.45,0),
              size = 0.6, 
@@ -244,9 +245,9 @@ for (df_name in names(df_list)) {
 gemeinden <- pop_clean %>% 
   filter(bundesland == "Salzburg") %>%
   dplyr::select(-c(4,5)) %>%
-  rename(c(gkz = 2, bevölkerung = 4)) %>%
+  rename(c(gkz = 2, bev?lkerung = 4)) %>%
   group_by(gemeindename, gkz) %>%
-  summarise(bevölkerung = sum(bevölkerung)) %>%
+  summarise(bev?lkerung = sum(bev?lkerung)) %>%
   # merge with gem_grenz_raw on basis of muncipality name & code
   right_join(gem_grenz_clean, by = c("gkz" = "gemnr", "gemeindename" = "name")) %>%
   st_as_sf() # reasign as sf object
@@ -255,20 +256,20 @@ gemeinden <- pop_clean %>%
 
 # clean ltw_raw
 ltw <- ltw_clean %>%
-  rename(gemnr = 1, name = 2, ÖVP = 9, SPÖ = 11, FPÖ = 13, GRÜNE = 15, 
-         NEOS = 17, KPÖ = 19, WIRS = 21, MFG = 23) %>% # rename rows
+  rename(gemnr = 1, name = 2, ?VP = 9, SP? = 11, FP? = 13, GR?NE = 15, 
+         NEOS = 17, KP? = 19, WIRS = 21, MFG = 23) %>% # rename rows
   filter(!row_number() %in% c(1:17, 137:nrow(ltw_clean))) %>% # remove rows which don't contain municipality level data
   dplyr::select(-c(3:8, 10, 12, 14, 16, 18, 20, 22, 24:ncol(ltw_clean))) %>% # remove columns that contain percentage data, turnout values and those that contain no data
   mutate_at(c(3:10), ~str_replace_all(., "\\.", "")) %>% # remove all the . in columns containing vote data
   mutate_at(c(3:10), as.numeric) %>% # set columns containing vote data to numeric
   mutate_at(1, as.double) %>% # set to double to allow for joining with gemeinden later
-  mutate(total_stimmen = rowSums(across(ÖVP:MFG))) %>% # sum up the total number of votes for each municipality
-  mutate(ÖVP_prozent = ÖVP/total_stimmen*100, 
-         SPÖ_prozent = SPÖ/total_stimmen*100,
-         FPÖ_prozent = FPÖ/total_stimmen*100, 
-         GRÜNE_prozent = GRÜNE/total_stimmen*100,
+  mutate(total_stimmen = rowSums(across(?VP:MFG))) %>% # sum up the total number of votes for each municipality
+  mutate(?VP_prozent = ?VP/total_stimmen*100, 
+         SP?_prozent = SP?/total_stimmen*100,
+         FP?_prozent = FP?/total_stimmen*100, 
+         GR?NE_prozent = GR?NE/total_stimmen*100,
          NEOS_prozent = NEOS/total_stimmen*100,
-         KPÖ_prozent = KPÖ/total_stimmen*100, 
+         KP?_prozent = KP?/total_stimmen*100, 
          WIRS_prozent = WIRS/total_stimmen*100,
          MFG_prozent = MFG/total_stimmen*100, .after = MFG) # calculate percentages of votes for each party in each municipality
 
@@ -613,10 +614,10 @@ tm_shape(flaeche_geeignet) +
   tm_borders(col="black", 
              lwd=2) + 
   tm_add_legend(type = c("fill"),
-                labels = c("Geeingte Solarfläche", "Bestehende Anlagen"),
+                labels = c("Geeingte Solarfl?che", "Bestehende Anlagen"),
                 col = c( "yellow", "red"),
                 border.lwd = 0) +
-  tm_layout(main.title = "Geeignete Solarfläche und Bestehende Solaranlagen", 
+  tm_layout(main.title = "Geeignete Solarfl?che und Bestehende Solaranlagen", 
             main.title.fontface = 2,fontfamily = "Arial",main.title.size = 1.2, 
             legend.outside = TRUE,legend.text.size = 0.75, 
             legend.position = c("left","top"), 
@@ -752,7 +753,7 @@ gemeinden_data <- gemeinden_voll %>%
   relocate(gruenland_anteil, .after = gruenland_flaeche) %>%
   relocate(bewohnt_anteil, .after = bewohnte_flaeche) %>%
   relocate(berg_anteil, .after = berg_flaeche) %>% 
-  mutate(einwohnerzahl_pro_qkm = bevölkerung/as.numeric(set_units(flaeche, km^2)), .after = bevölkerung) %>%
+  mutate(einwohnerzahl_pro_qkm = bev?lkerung/as.numeric(set_units(flaeche, km^2)), .after = bev?lkerung) %>%
   st_as_sf()
 
 #### ---------------------------- Leaflet Map ----------------------------- ####
@@ -842,7 +843,7 @@ basemap %>%
     fillColor = "yellow",
     # set the fill opacity
     fillOpacity = 0.6,
-    group = "Geeignete Solarfläche"
+    group = "Geeignete Solarfl?che"
   ) %>%
   
   addPolygons(
@@ -888,27 +889,27 @@ basemap %>%
                   "<div style='text-align: center;'>",
                   gemeinden_data_4326$gemeindename, 
                   "<div style='text-align: left;'>",
-                  "<br><b>Bevölkerung</br> ",
+                  "<br><b>Bev?lkerung</br> ",
                   "<br><b>Einwohnerzahl:</b> ", 
                   "<b><span style='font-weight: normal;'>",
-                  gemeinden_data_4326$bevölkerung,
-                  "<br><b>Bevölkerungsdichte:</b> ", 
+                  gemeinden_data_4326$bev?lkerung,
+                  "<br><b>Bev?lkerungsdichte:</b> ", 
                   format(round(gemeinden_data_4326$einwohnerzahl_pro_qkm, 3), 
                          nsmall = 3), "Einwohner/km","<br>", 
                   "<br><b>Solar</br> ",
-                  "<br><b>Geeignete Solarfläche (Absolut):</b> ", 
+                  "<br><b>Geeignete Solarfl?che (Absolut):</b> ", 
                   "<b><span style='font-weight: normal;'>",
                   format(round(set_units(gemeinden_data_4326$pot_solar_flaeche,
                                          km^2), 3), nsmall = 3),
-                  "<br><b>Geeignete Solarfläche (Anteil):</b> ", 
+                  "<br><b>Geeignete Solarfl?che (Anteil):</b> ", 
                   format(round(gemeinden_data_4326$solar_anteil, 3), 
                          nsmall = 3), "%", "<br>", "<br><b>Landnutzung</br> ",
-                  "<br><b>Grünland (Anteil):</b> ", 
+                  "<br><b>Gr?nland (Anteil):</b> ", 
                   "<b><span style='font-weight: normal;'>",
                   format(round(gemeinden_data_4326$gruenland_anteil, 3), nsmall = 3),
                   "%","<br><b>Bewohnte Gebiete (Anteil):</b> ", 
                   format(round(gemeinden_data_4326$bewohnt_anteil, 3), nsmall = 3), 
-                  "%", "<br><b>Bergfläche (Anteil):</b> ", 
+                  "%", "<br><b>Bergfl?che (Anteil):</b> ", 
                   format(round(gemeinden_data_4326$berg_anteil, 3), nsmall = 3), 
                   "%"),
     highlightOptions = highlightOptions(color = "black", weight = 4, bringToFront = TRUE)
@@ -920,7 +921,7 @@ basemap %>%
       "Esri.WorldImagery", "Esri.WorldTerrain"
     ),
     overlayGroups = c("Bezirke", "Gemeinden", "Bestehende Solaranlagen", 
-                      "Geeignete Solarfläche", "Schutzgebiete", 
+                      "Geeignete Solarfl?che", "Schutzgebiete", 
                       "Bewohnte Gebiete"),
     # position it on the top left
     position = "topleft"
@@ -1048,14 +1049,14 @@ berg_palette <- brewer.pal(8, "Greys")
 # solar absolute 
 tm_shape(gemeinden_GI)+
   tm_fill("pot_solar_flaeche", 
-          title = "Fläche (Quadratlkilometer)",
+          title = "Fl?che (Quadratlkilometer)",
           style = "pretty",
           textNA = "No data",
           colorNA = "white", 
           palette = solar_palette, border.col = "black")+
   tm_borders(col="black", 
              lwd=2) + 
-  tm_layout(main.title = "Geeignete Solarfläche", 
+  tm_layout(main.title = "Geeignete Solarfl?che", 
             main.title.fontface = 2,fontfamily = "Arial",main.title.size = 1.2, 
             legend.outside = TRUE,legend.text.size = 0.75, 
             legend.position = c("left","top"), 
@@ -1086,7 +1087,7 @@ tm_shape(gemeinden_GI)+
           palette = solar_palette, border.col = "black")+
   tm_borders(col="black", 
              lwd=2) + 
-  tm_layout(main.title = "Geeignete Solarfläche (Relativ)", 
+  tm_layout(main.title = "Geeignete Solarfl?che (Relativ)", 
             main.title.fontface = 2,fontfamily = "Arial",main.title.size = 1.2, 
             legend.outside = TRUE,legend.text.size = 0.75, 
             legend.position = c("left","top"), 
@@ -1117,7 +1118,7 @@ tm_shape(gemeinden_GI)+
           palette = gland_palette, border.col = "black")+
   tm_borders(col="black", 
              lwd=2) + 
-  tm_layout(main.title = "Grünland (Relativ)", 
+  tm_layout(main.title = "Gr?nland (Relativ)", 
             main.title.fontface = 2,fontfamily = "Arial",main.title.size = 1.2, 
             legend.outside = TRUE,legend.text.size = 0.75, 
             legend.position = c("left","top"), 
@@ -1216,7 +1217,7 @@ tm_shape(gemeinden_GI)+
           palette = GIFarben, border.col = "black")+
   tm_borders(col="black", 
              lwd=2) + 
-  tm_layout(main.title = "Geeignete Solarfläche (absolut) - Hotspot Analyse", 
+  tm_layout(main.title = "Geeignete Solarfl?che (absolut) - Hotspot Analyse", 
             main.title.fontface = 2,fontfamily = "Arial",main.title.size = 1.2, 
             legend.outside = TRUE, legend.text.size = 0.75, 
             legend.position = c("left","top"), 
@@ -1251,7 +1252,7 @@ tm_shape(gemeinden_GI)+
           palette = GIFarben, border.col = "black")+
   tm_borders(col="black", 
              lwd=2) + 
-  tm_layout(main.title = "Geeignete Solarfläche (relativ) - Hotspot Analyse", 
+  tm_layout(main.title = "Geeignete Solarfl?che (relativ) - Hotspot Analyse", 
             main.title.fontface = 2,fontfamily = "Arial",main.title.size = 1.2, 
             legend.outside = TRUE,legend.text.size = 0.75, 
             legend.position = c("left","top"), 
@@ -1283,7 +1284,7 @@ tm_shape(gemeinden_GI)+
           palette = GIFarben, border.col = "black")+
   tm_borders(col="black", 
              lwd=2) + 
-  tm_layout(main.title = "Grünland - Hotspot Analyse", 
+  tm_layout(main.title = "Gr?nland - Hotspot Analyse", 
             main.title.fontface = 2,fontfamily = "Arial",main.title.size = 1.2, 
             legend.outside = TRUE,legend.text.size = 0.75, 
             legend.position = c("left","top"), 
@@ -1443,7 +1444,7 @@ summary(fit)
 ltw_geo <- gemeinden_data %>%
   select(c(1:2, 15:22, 33)) %>%
   rename_with(~str_remove(., "_prozent"), ends_with("_prozent")) %>%
-  rename(Grüne = GRÜNE) %>%
+  rename(Gr?ne = GR?NE) %>%
   rowwise() %>%
   mutate(staerkste_partei = names(.)[which.max(c_across(3:10))+2], .after = MFG) %>%
 
@@ -1458,7 +1459,7 @@ ltw_geo$gewinnspanne <- apply(ltw_geo[, -c(1:2, (ncol(ltw_geo) - 1):ncol(ltw_geo
 ltw_geo <- ltw_geo %>%
   select(c(1:11, 13, 12))
 
-# create different tm_polygons and fill accordingly? SPÖ, ÖVP and FPÖ
+# create different tm_polygons and fill accordingly? SP?, ?VP and FP?
 #### ---------------------------- Election Maps --------------------------- ####
 
 #### Map of Salzburg with Gemeindegrenzen (names) and inset map
@@ -1517,9 +1518,11 @@ tm_shape(gemeinden_clus) +
 
 # DLM_2000_BAUTEN_20230912 - stromleitungen
 
-# Limitations with Flächenwidmung
+# Limitations with Fl?chenwidmung
 
 # ob es politisch durchsetzbar ist, koennte eine folgende Stuide sein
 # decision support system - wo werden die grÃ¶ÃŸte Anzahl von Einwohnern betroffen
 # ob es wirtschaftloch Sinne macht, solche kleine Anlagen zu bauen - oder lieber
-# größere Anlagen, die zusammengeschlossen sind
+# gr??ere Anlagen, die zusammengeschlossen sind
+
+# keine mininmale FlÃ¤chengrÃ¶ÃŸe - hÃ¤tte das setzen kÃ¶nnen
