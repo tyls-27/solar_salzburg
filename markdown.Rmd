@@ -3,13 +3,13 @@ title: "solarpotenzial_salzburg"
 author: "Timothy Sung"
 date: "`r Sys.Date()`"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_chunk$set(message=FALSE)
+knitr::opts_chunk$set(message = FALSE)
 knitr::opts_chunk$set(warning = FALSE)
 knitr::opts_chunk$set(eval = FALSE)
 ```
@@ -43,6 +43,9 @@ library(tmaptools)
 library(nominatimlite)
 library(knitr)
 library(kableExtra)
+library(extrafont)
+library(tinytex)
+library(leaflegend)
 ```
 
 ## Dateneinlesen
@@ -58,7 +61,7 @@ setwd("~/Documents")
 solar_raw <- rast("offline_files/Solarpot/solarpot_31258.tif")
 ```
 
-```{r, eval = TRUE}
+```{r, eval = TRUE, results = FALSE}
 # download data on municipality borders and populations, and create state border polygon  ----
 # download raw data on municipality borders 
 gem_grenz_raw <- st_read("/vsicurl/https://raw.githubusercontent.com/tyls-27/solar_salzburg/master/ESRI_SHAPE/Gemeindegrenzen.shp")
@@ -77,7 +80,7 @@ bundesland <- gem_grenz_raw %>%
   ungroup()
 ```
 
-```{r, eval=TRUE}
+```{r, eval=TRUE, results = FALSE}
 #### -------------------------- Map of Salzburg --------------------------- ####
 # add data on counties
 bezirke <- st_read("/vsicurl/https://raw.githubusercontent.com/tyls-27/solar_salzburg/master/vgd/Salzburg_BEV_VGD_LAM.shp")
@@ -110,7 +113,7 @@ bezirk_grenz <- bezirk_list %>%
   ungroup()
 ```
 
-```{r}
+```{r, eval=TRUE, results = FALSE}
 # Prepare data for plotting
 # transform gem_grenz_raw to OSM CRS
 gem_grenz_raw_3857 <- st_transform(gem_grenz_raw, "EPSG: 3857")
@@ -135,7 +138,7 @@ sbg_bbox <- st_bbox(gem_grenz_raw)
 aoi_inset <- bbox_to_poly(sbg_bbox, crs = 31258)
 ```
 
-```{r, eval = TRUE}
+```{r, eval = TRUE, fig.align='center'}
 # Salzburg Map Plot Code
 
 # create inset map
@@ -143,7 +146,7 @@ inset_karte<- tm_shape(osm_sbg) +
   tm_rgb() +
   tm_shape(aoi_inset) +
   tm_borders(col="red", lwd = 3) +
-  tm_layout(frame = F)
+  tm_layout(frame = F, bg.color = "transparent")
 
 # create map of Salzburg with county and municipality boundaries
 sbg_karte <-tm_shape(bezirk_grenz) + 
@@ -186,18 +189,13 @@ sbg_karte <-tm_shape(bezirk_grenz) +
              position = c("right", "top")) + 
   # add scale bar
   tm_scale_bar(breaks = c(0, 10, 20, 30, 40, 50), text.size=0.75,
-               position = c(0, -0.02))+
-  # add credits
-  tm_credits("Projection: MGI / Austria GK M31\nData: Land Salzburg, 
-             OGD Österreich, ESRI", 
-             fontface = "bold",
-             position = c(0.45,0),
-             size = 0.6, 
-             align = "left")
+               position = c(0, -0.02)) +
+  tm_add_legend(title = "Projektion: MGI / Austria GK M31\nDaten: Land Salzburg, OGD\nÖsterreich, ESRI", type = 'text', legend.format = list(title.size = 0.1))
 
 # print map
 sbg_karte
-print(inset_karte, vp = grid::viewport(0.8, 0.22, width = 0.3, height = 0.53))
+print(inset_karte, vp = grid::viewport(0.83, 0.15, width = 0.3, height = 0.53))
+
 ```
 
 ```{r, eval=TRUE}
@@ -208,9 +206,11 @@ kbl(select(as_tibble(bezirk_list),c("PB", "NAME")),
   column_spec(1, bold = T) %>%
   collapse_rows(columns = 1, valign = "top")
 
+# reformat so that a new column is started for each different entry of bezirk
+
 ```
 
-```{r, eval = TRUE}
+```{r, eval = TRUE, results = FALSE}
 # read in data on the Landtagswahl 2023 ----
 ltw_raw <- read_csv2("https://raw.githubusercontent.com/tyls-27/solar_salzburg/master//LTW-2023.csv") #only first page of orignal data saved as csv
 
@@ -245,7 +245,7 @@ lc_sbg <- project(lc_comb_sbg, "EPSG: 31258")
 writeRaster(lc_sbg, "daten_zwischenablage/lc_sbg.tif", overwrite = TRUE) 
 ```
 
-```{r, eval = TRUE}
+```{r, eval = TRUE, results = FALSE}
 # read in data on zoning ----
 fl_wid_raw <- st_read("offline_files/Flaechenwidmung/Flaechenwidmung.shp")
 ```
@@ -263,7 +263,7 @@ dgm <- project(dgm, "EPSG:31258")
 writeRaster(dgm, "daten_zwischenablage/dgm.tif") # write out raster
 ```
 
-```{r, eval = TRUE}
+```{r, eval = TRUE, results = FALSE}
 #### Load data on protected areas
 
 # download data on FFH sites ----
@@ -333,10 +333,10 @@ for (df_name in names(df_list)) {
 gemeinden <- pop_clean %>% 
   filter(bundesland == "Salzburg") %>%
   select(-c(4,5)) %>%
-  rename(c(gkz = 2, bevölkerung = 4)) %>%
+  rename(c(gkz = 2, bevoelkerung = 4)) %>%
   group_by(gemeindename, gkz) %>%
-  summarise(bevölkerung = sum(bevölkerung)) %>%
-  # merge with gem_grenz_raw on basis of muncipality name & code
+  summarise(bevoelkerung = sum(bevoelkerung)) %>%
+  # merge with gem_grenz_raw on basis of municipality name & code
   right_join(gem_grenz_clean, by = c("gkz" = "gemnr", "gemeindename" = "name")) %>%
   st_as_sf() # reasign as sf object
 
@@ -347,8 +347,8 @@ gemeinden <- pop_clean %>%
 # clean ltw_raw
 ltw <- ltw_clean %>%
   # rename columns
-  rename(gemnr = 1, name = 2, ÖVP = 9, SPÖ = 11, FPÖ = 13, GRÜNE = 15, 
-         NEOS = 17, KPÖ = 19, WIRS = 21, MFG = 23) %>% 
+  rename(gemnr = 1, name = 2, OeVP = 9, SPOe = 11, FPOe = 13, GRUENE = 15, 
+         NEOS = 17, KPOe = 19, WIRS = 21, MFG = 23) %>% 
   # remove rows which don't contain municipality level data
   filter(!row_number() %in% c(1:17, 137:nrow(ltw_clean))) %>% 
   dplyr::select(-c(3:8, 10, 12, 14, 16, 18, 20, 22, 24:ncol(ltw_clean))) %>% 
@@ -360,14 +360,14 @@ ltw <- ltw_clean %>%
   # set to double to allow for joining with gemeinden later
   mutate_at(1, as.double) %>% 
   # sum up the total number of votes for each municipality
-  mutate(total_stimmen = rowSums(across(ÖVP:MFG))) %>% 
+  mutate(total_stimmen = rowSums(across(OeVP:MFG))) %>% 
   # calculate percentage of votes for each party in each municipality
-  mutate(ÖVP_prozent = ÖVP/total_stimmen*100, 
-         SPÖ_prozent = SPÖ/total_stimmen*100,
-         FPÖ_prozent = FPÖ/total_stimmen*100, 
-         GRÜNE_prozent = GRÜNE/total_stimmen*100,
+  mutate(OeVP_prozent = OeVP/total_stimmen*100, 
+         SPOe_prozent = SPOe/total_stimmen*100,
+         FPOe_prozent = FPOe/total_stimmen*100, 
+         GRUENE_prozent = GRUENE/total_stimmen*100,
          NEOS_prozent = NEOS/total_stimmen*100,
-         KPÖ_prozent = KPÖ/total_stimmen*100, 
+         KPOe_prozent = KPOe/total_stimmen*100, 
          WIRS_prozent = WIRS/total_stimmen*100,
          MFG_prozent = MFG/total_stimmen*100, .after = MFG) 
 
@@ -637,7 +637,7 @@ polygon_flaeche_geeignet <- st_read("/vsicurl/https://raw.githubusercontent.com/
 
 ## Auswählen von tauglichen Landbedeckungstypen
 
-```{r, include = FALSE}
+```{r, include = FALSE, eval = TRUE}
 # load in landcover data for Salzburg
 lc_sbg <- rast("daten_zwischenablage/lc_sbg.tif")
 ```
@@ -671,7 +671,7 @@ lc_geeignet <- rast("daten_zwischenablage/lc_geeignet.tif")
 
 ## Topographische Kriterien
 
-```{r, include=FALSE}
+```{r, include=FALSE, eval = TRUE}
 # load in dgm
 dgm <- rast("daten_zwischenablage/dgm.tif")
 ```
@@ -842,10 +842,16 @@ flaeche_geeignet <- st_read("daten_zwischenablage/flaeche_geeignet.shp")
 
 ## Solaranlage in Salzburg - Aktuell und Potenzial
 
-```{r, eval=TRUE}
+```{r, eval=TRUE, fig.align='center'}
 #### -------- Map of Potential Solar Areas and Current Solar Areas -------- ####
+# create new bounding box as bottom of map is cut off
+#bbox_new <- st_bbox(hranice) # current bounding box
 
-tm_shape(flaeche_geeignet) +
+#xrange <- bbox_new$xmax - bbox_new$xmin # range of x values
+#yrange <- bbox_new$ymax - bbox_new$ymin
+
+# plot map
+tm_shape(flaeche_geeignet, bbox = st_bbox(gemeinden_ltw)) +
   # add yellow polygons for areas suitable for solar farms
   tm_polygons(col= "yellow", 
               border.col = "yellow") +
@@ -878,11 +884,7 @@ tm_shape(flaeche_geeignet) +
   tm_scale_bar(breaks = c(0, 10, 20, 30, 40, 50), text.size=0.75,
                position = c(0, -0.02))+
   # add credits
-  tm_credits("Projection: MGI / Austria GK M31\nData: Land Salzburg", 
-             fontface = "bold",
-             position = c(0.45,0),
-             size = 0.6, 
-             align = "left")
+  tm_add_legend(title = "Projektion: MGI / Austria GK M31\nDaten: Land Salzburg, OGD\nÖsterreich", type = 'text', legend.format = list(title.size = 0.1))
 ```
 
 ## Cluster und Hotspot Analyse
@@ -961,7 +963,7 @@ gemeinden_voll <- gemeinden_voll %>%
   left_join(gland_pixels[, c("gkz", "gruenland_flaeche")], by = "gkz")
 ```
 
-```{r}
+```{r, eval=TRUE}
 #### Calculate the amount of populated area per municipality ----
 
 # initiate vector to store data on populated area per municipality
@@ -1020,26 +1022,13 @@ gemeinden_voll <- gemeinden_voll %>%
 
 ```{r, include=FALSE, eval=TRUE}
 #### Calculate amount of mountain area per municipality ----
-dgm_1500_zahl <- c(1500, Inf, 1)
-
-dgm_1500_matr <- matrix(dgm_1500_zahl, ncol=3, byrow=TRUE)
-
-dgm_1500 <- classify(dgm, dgm_1500_matr, others=NA)
-
-# writeRaster(dgm_1500,"daten_zwischenablage/dgm_1500.tif", overwrite=TRUE)
-
-# Extract raster values for each polygon
-dgm_pixels <- terra::extract(dgm_1500, gemeinden_terra, fun = sum, na.rm = TRUE)
-
-#write_csv(dgm_pixels, "daten_zwischenablage/dgm_pixels.csv")
-
 dgm_pixels <- read_csv("https://raw.githubusercontent.com/tyls-27/solar_salzburg/master/daten_zwischenablage/dgm_pixels.csv")
 
 # Add unique identifier from gemeinden_solar to extracted values
 dgm_pixels$gkz <- gemeinden_voll$gkz
 
 # Calculate pixel area
-pixel_flaeche <- prod(res(dgm_1500))
+pixel_flaeche <- prod(res(dgm))
 
 # Convert pixel counts to area
 dgm_pixels$berg_flaeche <- dgm_pixels$dgm5m * pixel_flaeche
@@ -1077,14 +1066,188 @@ gemeinden_data <- gemeinden_voll %>%
   relocate(bewohnt_anteil, .after = bewohnte_flaeche) %>%
   relocate(berg_anteil, .after = berg_flaeche) %>%
   # calculate the population density in km2 and mutate to tibble
-  mutate(einwohnerzahl_pro_qkm = bev?lkerung/as.numeric(set_units(flaeche, "km^2")), .after = bevölkerung) %>%
+  mutate(einwohnerzahl_pro_qkm = bevoelkerung/as.numeric(set_units(flaeche, "km^2")), .after = bevoelkerung) %>%
   # transform back to sf object
   st_as_sf()
 ```
 
+### Interaktive Karte
+```{r, eval = TRUE}
+#### ---------------------------- Leaflet Map ----------------------------- ####
+# transform layers to 4326 for plotting
+flaeche_geeignet_4326 <- st_transform(flaeche_geeignet, "EPSG: 4326")
+fl_wid_solar_4326 <- st_transform(fl_wid_solar, "EPSG: 4326")
+fl_wid_bewohnt_4326 <- st_transform(fl_wid_bewohnt, "EPSG: 4326")
+pa_comb_4326 <- st_transform(pa_comb, "EPSG: 4326")
+gemeinden_data_4326 <- st_transform(gemeinden_data, "EPSG: 4326")
+bezirk_grenz_4326 <- st_transform(bezirk_grenz, "EPSG: 4326")
+```
+```{r, eval = TRUE}
+# create basemap
+basemap <- leaflet() %>% 
+  setView(lng = 13, lat = 47.5, zoom = 8.4) %>%
+  # add different provider tiles
+  addProviderTiles(
+    "OpenStreetMap",
+    # give the layer a name
+    group = "OpenStreetMap"
+  ) %>%
+  addProviderTiles(
+    "CartoDB.Positron",
+    group = "CartoDB.Positron"
+  ) %>%
+  addProviderTiles(
+    "Esri.WorldTopoMap",
+    group = "Esri.WorldTopoMap"
+  ) %>%
+  addProviderTiles(
+    "Esri.WorldImagery",
+    group = "Esri.WorldImagery"
+  ) %>%
+  addProviderTiles(
+    "Esri.WorldTerrain",
+    group = "Esri.WorldTerrain"
+  ) %>%
+  addLayersControl(
+    baseGroups = c(
+      "OpenStreetMap","CartoDB.Positron", "Esri.WorldTopoMap",
+      "Esri.WorldImagery", "Esri.WorldTerrain"
+    ),
+    # position it on the topleft
+    position = "topleft"
+  )
+
+# plot map 
+basemap %>%
+  addPolygons(
+    data = bezirk_grenz_4326,
+    stroke = TRUE,
+    # set the color of the polygon
+    color = "black",
+    # set the opacity of the outline
+    opacity = 1,
+    # set the stroke width in pixels
+    weight = 2,
+    fillColor = "whitesmoke",
+    # set the fill opacity
+    fillOpacity = 0.3,
+    group = "Bezirke",
+    popup = paste("<b>Bezirk</b> ", "<br>", bezirk_grenz_4326$PB),
+    highlightOptions = highlightOptions(color = "black", weight = 4, bringToFront = TRUE)
+  ) %>%
+  addPolygons(
+    data = fl_wid_solar_4326,
+    # set the color of the polygon
+    color = "red",
+    # set the opacity of the outline
+    opacity = 1,
+    # set the stroke width in pixels
+    weight = 1,
+    # set the fill opacity
+    fillColor = "red",
+    fillOpacity = 0.6,
+    group = "Bestehende Solaranlagen"
+  ) %>%
+  
+  addPolygons(
+    data = flaeche_geeignet_4326,
+    # set the color of the polygon
+    color = "yellow",
+    # set the opacity of the outline
+    opacity = 1,
+    # set the stroke width in pixels
+    weight = 1,
+    fillColor = "yellow",
+    # set the fill opacity
+    fillOpacity = 0.6,
+    group = "Geeignete Solarfläche"
+  ) %>%
+  
+  addPolygons(
+    data = pa_comb_4326,
+    # set the color of the polygon
+    color = "green",
+    # set the opacity of the outline
+    opacity = 1,
+    # set the stroke width in pixels
+    weight = 1,
+    fillColor = "green",
+    # set the fill opacity
+    fillOpacity = 0.6,
+    group = "Schutzgebiete"
+  ) %>%
+  addPolygons(
+    data = fl_wid_bewohnt_4326,
+    # set the color of the polygon
+    color = "black",
+    # set the opacity of the outline
+    opacity = 1,
+    # set the stroke width in pixels
+    weight = 1,
+    fillColor = "black",
+    # set the fill opacity
+    fillOpacity = 0.6,
+    group = "Bewohnte Gebiete"
+  ) %>%
+  addPolygons(
+    data = gemeinden_data_4326,
+    stroke = TRUE,
+    # set the color of the polygon
+    color = "black",
+    # set the opacity of the outline
+    opacity = 1,
+    # set the stroke width in pixels
+    weight = 1,
+    fillColor = "grey",
+    # set the fill opacity
+    fillOpacity = 0,
+    group = "Gemeinden",
+    popup = paste("<b><span style='font-weight: bold;'>",
+                  "<div style='text-align: center;'>",
+                  gemeinden_data_4326$gemeindename, 
+                  "<div style='text-align: left;'>",
+                  "<br><b>Bevölkerung</br> ",
+                  "<br><b>Einwohnerzahl:</b> ", 
+                  "<b><span style='font-weight: normal;'>",
+                  gemeinden_data_4326$bevoelkerung,
+                  "<br><b>Bevölkerungsdichte:</b> ", 
+                  format(round(gemeinden_data_4326$einwohnerzahl_pro_qkm, 3), 
+                         nsmall = 3), "Einwohner/km","<br>", 
+                  "<br><b>Solar</br> ",
+                  "<br><b>Geeignete Solarfläche (Absolut):</b> ", 
+                  "<b><span style='font-weight: normal;'>",
+                  format(round(set_units(gemeinden_data_4326$pot_solar_flaeche,
+                                         km^2), 3), nsmall = 3),
+                  "<br><b>Geeignete Solarfläche (Anteil):</b> ", 
+                  format(round(gemeinden_data_4326$solar_anteil, 3), 
+                         nsmall = 3), "%", "<br>", "<br><b>Landnutzung</br> ",
+                  "<br><b>Grünland (Anteil):</b> ", 
+                  "<b><span style='font-weight: normal;'>",
+                  format(round(gemeinden_data_4326$gruenland_anteil, 3), nsmall = 3),
+                  "%","<br><b>Bewohnte Gebiete (Anteil):</b> ", 
+                  format(round(gemeinden_data_4326$bewohnt_anteil, 3), nsmall = 3), 
+                  "%", "<br><b>Bergfläche (Anteil):</b> ", 
+                  format(round(gemeinden_data_4326$berg_anteil, 3), nsmall = 3), 
+                  "%"),
+    highlightOptions = highlightOptions(color = "black", weight = 4, bringToFront = TRUE)
+  ) %>%
+  # add a layers control
+  addLayersControl(
+    baseGroups = c(
+      "OpenStreetMap","CartoDB.Positron", "Esri.WorldTopoMap",
+      "Esri.WorldImagery", "Esri.WorldTerrain"
+    ),
+    overlayGroups = c("Bezirke", "Gemeinden", "Bestehende Solaranlagen", 
+                      "Geeignete Solarfläche", "Schutzgebiete", 
+                      "Bewohnte Gebiete"),
+    # position it on the top left
+    position = "topleft"
+  )
+```
+
 ### Hotspot Analyse und Räumliche Autocorrelation
 
-```{r, eval=TRUE}
+```{r, eval=TRUE, fig.align='center'}
 #### Spatial autocorrelation ----
 
 #### Calculate spatial autocorrelation of potential solar farm areas, grassland, populated areas and mountainous areas
@@ -1144,7 +1307,7 @@ GI_berg_relativ <- gemeinden_data %>%
 ```{r, eval=TRUE}
 # join the local Gi* statistics to the names, gkz and geometry column of the gemeinden_data spatial dataframe
 gemeinden_GI <- gemeinden_data %>% 
-  select(c(1,2,5, 23:30)) %>%
+  select(c(1,2,5, 23:31)) %>%
   add_column(gi_solar_absolut = GI_solar_absolut,
          gi_solar_relativ = GI_solar_relativ,
          gi_gland_relativ = GI_gland_relativ,
@@ -1173,7 +1336,7 @@ farben_hotspot <- colorRampPalette(c("blue", "white","red"))
 GIFarben <- farben_hotspot(13)
 ```
 
-```{r, eval=TRUE}
+```{r, eval=TRUE, fig.align='center'}
 # solar absolute - chloropeth
 tm_shape(gemeinden_GI) +
   # fill the geometries using the solar_palette to reflect the amount of suitable solar areas in each municipality
@@ -1203,11 +1366,7 @@ tm_shape(gemeinden_GI) +
   tm_scale_bar(breaks = c(0, 10, 20, 30, 40, 50), text.size=0.75,
                position = c(0, -0.02))+
   # add credits
-  tm_credits("Projection: MGI / Austria GK M31\nData: Land Salzburg", 
-             fontface = "bold",
-             position = c(0.45,0),
-             size = 0.6, 
-             align = "left")
+  tm_add_legend(title = "Projektion: MGI / Austria GK M31\nDaten: Land Salzburg, OGD\nÖsterreich", type = 'text', legend.format = list(title.size = 0.1))
 
 # Solar absolute - GI Map
 tm_shape(gemeinden_GI) +
@@ -1241,14 +1400,10 @@ tm_shape(gemeinden_GI) +
   tm_shape(gemeinden_GI) + 
   tm_borders(col="black", lwd=2) +
   # add credits
-  tm_credits("Projection: MGI / Austria GK M31\nData: Land Salzburg", 
-             fontface = "bold",
-             position = c(0.45,0),
-             size = 0.6, 
-             align = "left")
+  tm_add_legend(title = "Projektion: MGI / Austria GK M31\nDaten: Land Salzburg, OGD\nÖsterreich", type = 'text', legend.format = list(title.size = 0.1))
 ```
 
-```{r, eval=TRUE}
+```{r, eval=TRUE, fig.align='center'}
 # Solar relative - chloropeth map
 tm_shape(gemeinden_GI) +
   # fill the geometries using the solar_palette to reflect the percentage of land that is suitable for solar farms in each municipality
@@ -1278,11 +1433,7 @@ tm_shape(gemeinden_GI) +
   tm_scale_bar(breaks = c(0, 10, 20, 30, 40, 50), text.size=0.75,
                position = c(0, -0.02))+
   # add credits
-  tm_credits("Projection: MGI / Austria GK M31\nData: Land Salzburg", 
-             fontface = "bold",
-             position = c(0.45,0),
-             size = 0.6, 
-             align = "left")
+  tm_add_legend(title = "Projektion: MGI / Austria GK M31\nDaten: Land Salzburg, OGD\nÖsterreich", type = 'text', legend.format = list(title.size = 0.1))
 
 # Solar relative - GI Map
 tm_shape(gemeinden_GI) +
@@ -1314,14 +1465,10 @@ tm_shape(gemeinden_GI) +
   tm_scale_bar(breaks = c(0, 10, 20, 30, 40, 50), text.size=0.75,
                position = c(0, -0.02))+
   # add credits
-  tm_credits("Projection: MGI / Austria GK M31\nData: Land Salzburg", 
-             fontface = "bold",
-             position = c(0.45,0),
-             size = 0.6, 
-             align = "left")
+  tm_add_legend(title = "Projektion: MGI / Austria GK M31\nDaten: Land Salzburg, OGD\nÖsterreich", type = 'text', legend.format = list(title.size = 0.1))
 ```
 
-```{r, eval=TRUE}
+```{r, eval=TRUE, fig.align='center'}
 # Grassland relative - chloropeth map
 tm_shape(gemeinden_GI) +
   # fill the geometries using the gland_palette to reflect the percentage of grassland cover in each municipality
@@ -1351,11 +1498,7 @@ tm_shape(gemeinden_GI) +
   tm_scale_bar(breaks = c(0, 10, 20, 30, 40, 50), text.size=0.75,
                position = c(0, -0.02))+
   # add credits
-  tm_credits("Projection: MGI / Austria GK M31\nData: ESA, Land Salzburg", 
-             fontface = "bold",
-             position = c(0.45,0),
-             size = 0.6, 
-             align = "left")
+  tm_add_legend(title = "Projektion: MGI / Austria GK M31\nDaten: Land Salzburg, OGD\nÖsterreich, ESA", type = 'text', legend.format = list(title.size = 0.1))
 
 # Grassland - GI map
 tm_shape(gemeinden_GI) +
@@ -1387,14 +1530,10 @@ tm_shape(gemeinden_GI) +
   tm_scale_bar(breaks = c(0, 10, 20, 30, 40, 50), text.size=0.75,
                position = c(0, -0.02))+
   # add credits
-  tm_credits("Projection: MGI / Austria GK M31\nData: ESA, Land Salzburg",
-             fontface = "bold",
-             position = c(0.45,0),
-             size = 0.6, 
-             align = "left")
+  tm_add_legend(title = "Projektion: MGI / Austria GK M31\nDaten: Land Salzburg, OGD\nÖsterreich, ESA", type = 'text', legend.format = list(title.size = 0.1))
 ```
 
-```{r, eval=TRUE}
+```{r, eval=TRUE, fig.align='center'}
 # Populated relative - chloropeth map
 tm_shape(gemeinden_GI) +
   # fill the geometries using the bewohnt_palette to reflect the percentage of populated land in each municipality
@@ -1408,7 +1547,7 @@ tm_shape(gemeinden_GI) +
   tm_borders(col="black", 
              lwd=2) + 
   # add legend and title
-  tm_layout(main.title = "Bewohnt (Relativ)", 
+  tm_layout(main.title = "Bewohnte Gebiete (Relativ)", 
             main.title.fontface = 2,fontfamily = "Arial",main.title.size = 1.2, 
             legend.outside = TRUE,legend.text.size = 0.75, 
             legend.position = c("left","top"), 
@@ -1423,11 +1562,7 @@ tm_shape(gemeinden_GI) +
   tm_scale_bar(breaks = c(0, 10, 20, 30, 40, 50), text.size=0.75,
                position = c(0, -0.02))+
   # add credits
-  tm_credits("Projection: MGI / Austria GK M31\nData: Land Salzburg", 
-             fontface = "bold",
-             position = c(0.45,0),
-             size = 0.6, 
-             align = "left")
+  tm_add_legend(title = "Projektion: MGI / Austria GK M31\nDaten: Land Salzburg, OGD\nÖsterreich", type = 'text', legend.format = list(title.size = 0.1))
 
 # Populated areas - GI map
 tm_shape(gemeinden_GI) +
@@ -1459,14 +1594,79 @@ tm_shape(gemeinden_GI) +
   tm_scale_bar(breaks = c(0, 10, 20, 30, 40, 50), text.size=0.75,
                position = c(0, -0.02))+
   # add credits
-  tm_credits("Projection: MGI / Austria GK M31\nData: Land Salzburg", 
-             fontface = "bold",
-             position = c(0.45,0),
-             size = 0.6, 
-             align = "left")
+  tm_add_legend(title = "Projektion: MGI / Austria GK M31\nDaten: Land Salzburg, OGD\nÖsterreich", type = 'text', legend.format = list(title.size = 0.1))
 ```
 
-```{r, eval=TRUE}
+```{r, eval=TRUE, fig.align='center'}
+# Populated relative - chloropeth map
+a <- tm_shape(gemeinden_GI) +
+  # fill the geometries using the bewohnt_palette to reflect the percentage of populated land in each municipality
+  tm_fill("bewohnt_anteil", 
+          title = "Abdeckung pro Gemeinde (%)",
+          style = "jenks",
+          textNA = "No data",
+          colorNA = "white", 
+          palette = bewohnt_palette, border.col = "black")+
+  # add municipality borders
+  tm_borders(col="black", 
+             lwd=2) + 
+  # add legend and title
+  tm_layout(main.title = "Bewohnte Gebiete (Relativ)", 
+            main.title.fontface = 2,fontfamily = "Arial",main.title.size = 1.2, 
+            legend.outside = TRUE,legend.text.size = 0.75, 
+            legend.position = c("left","top"), 
+            legend.title.size = 1.5, 
+            legend.title.fontface = 1.5, 
+            frame = F,
+            legend.format = list(text.separator="-")) + 
+  # add North arrow
+  tm_compass(type = "arrow", text.size = 0.75, size = 1.3,
+             position = c("right", "top")) + 
+  # add scale bar
+  tm_scale_bar(breaks = c(0, 10, 20, 30, 40, 50), text.size=0.75,
+               position = c(0, -0.02))+
+  # add credits
+  tm_add_legend(title = "Projektion: MGI / Austria GK M31\nDaten: Land Salzburg, OGD\nÖsterreich", type = 'text', legend.format = list(title.size = 0.1))
+
+# Populated areas - GI map
+b<- tm_shape(gemeinden_GI) +
+    # fill the geometries using the GIFarben to reflect the spatial hotspots of the proportion of populated area per municipality based on z-number derived from Getis-Ord (GI*) 
+  tm_fill("gi_bewohnt_relativ", 
+          title = "Gi (Z-Wert)",
+          style = "fixed",
+          breaks = c(-2, -1, 0, 1, 2, 3, 4, 5, 6),
+          midpoint = 0,
+          textNA = "No data",
+          colorNA = "white", 
+          palette = GIFarben, border.col = "black")+
+  # add municipality borders 
+  tm_borders(col="black", 
+             lwd=2) +
+  # add legend and title
+  tm_layout(main.title = "Bewohnte Gebiete - Hotspot Analyse", 
+            main.title.fontface = 2,fontfamily = "Arial",main.title.size =
+              1.2, 
+            legend.outside = TRUE,legend.text.size = 0.75, 
+            legend.position = c("left","top"), 
+            legend.title.size = 1.5, 
+            legend.title.fontface = 1.5, 
+            frame = F) + 
+  # add North arrow
+  tm_compass(type = "arrow", text.size = 0.75, size = 1.3,
+             position = c("right", "top")) + 
+  # add scale bar
+  tm_scale_bar(breaks = c(0, 10, 20, 30, 40, 50), text.size=0.75,
+               position = c(0, -0.02))+
+  # add credits
+  tm_add_legend(title = "Projektion: MGI / Austria GK M31\nDaten: Land Salzburg, OGD\nÖsterreich", type = 'text', legend.format = list(title.size = 0.1))
+
+results_maps <- tmap_arrange(a,b)
+
+results_maps
+
+```
+
+```{r, eval=TRUE, fig.align='center'}
 # Mountains relative - chloropeth map
 tm_shape(gemeinden_GI) +
     # fill the geometries using the berg_palette to reflect the percentage of mountainous area (> 1500 m) in each municipality
@@ -1498,11 +1698,7 @@ tm_shape(gemeinden_GI) +
   tm_shape(gemeinden_GI) + 
   tm_borders(col="black", lwd=2) +
   # add credits
-  tm_credits("Projection: MGI / Austria GK M31\nData: ESA, Land Salzburg", 
-             fontface = "bold",
-             position = c(0.45,0),
-             size = 0.6, 
-             align = "left")
+  tm_add_legend(title = "Projektion: MGI / Austria GK M31\nDaten: Land Salzburg, OGD\nÖsterreich", type = 'text', legend.format = list(title.size = 0.1))
 
 # Mountainous areas - GI map
 tm_shape(gemeinden_GI) +
@@ -1533,11 +1729,7 @@ tm_shape(gemeinden_GI) +
   tm_scale_bar(breaks = c(0, 10, 20, 30, 40, 50), text.size=0.75,
                position = c(0, -0.02))+
   # add credits
-  tm_credits("Projection: MGI / Austria GK M31\nData: Land Salzburg", 
-             fontface = "bold",
-             position = c(0.45,0),
-             size = 0.6, 
-             align = "left")
+  tm_add_legend(title = "Projektion: MGI / Austria GK M31\nDaten: Land Salzburg, OGD\nÖsterreich", type = 'text', legend.format = list(title.size = 0.1))
 ```
 
 ### Cluster Analyse
@@ -1573,7 +1765,7 @@ clusters
 fviz_cluster(clusters, data = gemeinden_clus[,2:6])
 ```
 
-```{r, eval=TRUE}
+```{r, eval=TRUE, fig.align='center'}
 # Mapping clusters
 
 # Add clusters to gemeinden_clus df
@@ -1611,11 +1803,7 @@ tm_shape(gemeinden_clus) +
   tm_scale_bar(breaks = c(0, 10, 20, 30, 40, 50), text.size=0.75,
                position = c(0, -0.02))+
   # add credits
-  tm_credits("Projection: MGI / Austria GK M31\nData: Land Salzburg", 
-             fontface = "bold",
-             position = c(0.45,0),
-             size = 0.6, 
-             align = "left")
+  tm_add_legend(title = "Projektion: MGI / Austria GK M31\nDaten: Land Salzburg, OGD\nÖsterreich, ESA", type = 'text', legend.format = list(title.size = 0.1))
 ```
 
 ```{r, eval=TRUE}
@@ -1628,38 +1816,204 @@ fit <- lm(solar_anteil ~ gruenland_anteil + bewohnt_anteil + berg_anteil + einwo
 summary(fit)
 ```
 
-```{r}
-tm_shape(gemeinden_GI)+
-  tm_fill("pot_solar_flaeche", 
-          title = "Fläche (Quadratlkilometer)",
-          style = "pretty",
-          midpoint = 0,
-          textNA = "No data",
-          colorNA = "white", 
-          palette = solar_palette, border.col = "black")+
-  tm_borders() +
-  tm_layout(main.title = "Geeignete Solarfläche (Relativ)", 
-            main.title.fontface = 2,fontfamily = "Arial",main.title.size = 1.2, 
-            legend.outside = TRUE,legend.text.size = 0.75, 
-            legend.position = c("left","top"), 
-            legend.title.size = 1.5, 
-            legend.title.fontface = 1.5, 
-            frame = F,
-            legend.format = list(text.separator="-")) + 
-  # add North arrow
-  tm_compass(type = "arrow", text.size = 0.75, size = 1.3,
-             position = c("right", "top")) + 
-  # add scale bar
-  tm_scale_bar(breaks = c(0, 10, 20, 30, 40, 50), text.size=0.75,
-               position = c(0, -0.02))+
-  tm_shape(gemeinden_GI) + 
-  tm_borders(col="black", lwd=2) +
-  # add credits
-  tm_credits("Projection: MGI / Austria GK M31\nData: Land Salzburg", 
-             fontface = "bold",
-             position = c(0.45,0),
-             size = 0.6, 
-             align = "left")
+## Politische Durchführbarkeit
+```{r, eval=TRUE}
+#### ---------------------------- Election Map ---------------------------- ####
+
+# select data from gemeinden_data on elections and add a row containing strongest party in each municipality
+ltw_geo <- gemeinden_data %>%
+  select(c(1:2, 15:22, 33)) %>%
+  rename_with(~str_remove(., "_prozent"), ends_with("_prozent")) %>%
+  rename(Gruene = GRUENE) %>%
+  rowwise() %>%
+  mutate(staerkste_partei = names(.)[which.max(c_across(3:10))+2], .after = MFG)
+
+# create function to calculate winning margin of winning party in each municipality
+gewinspanne_func <- function(reihe) {
+  reihe_sortiert <- sort(as.numeric(reihe), decreasing = TRUE)
+  differenz <- reihe_sortiert[1] - reihe_sortiert[2]
+  return(differenz)
+}
+
+# add a row to ltw_geo with the winning margin of winning party in each municipality
+ltw_geo$gewinnspanne <- apply(ltw_geo[, -c(1:2, (ncol(ltw_geo) - 1):ncol(ltw_geo))], 1, gewinspanne_func)
+
+# reorder columns and add columns for each winning party and their winning margins
+ltw_geo <- ltw_geo %>%
+  select(c(1:11, 13, 12)) %>%
+  mutate(OeVP_gemeinden = ifelse(staerkste_partei == "OeVP", gewinnspanne, NA),
+         FPOe_gemeinden = ifelse(staerkste_partei == "FPOe", gewinnspanne, NA),
+         SPOe_gemeinden = ifelse(staerkste_partei == "SPOe", gewinnspanne, NA),
+         .after = staerkste_partei)
+```
+
+Hier verlieren wir Informationen über die Parteien, die keinen ersten Platz in
+einer Gemeinde erzielen.
+
+```{r, eval=TRUE}
+# transform layers to 4326 for plotting
+ltw_geo_4326 <- st_transform(ltw_geo, "EPSG: 4326")
+
+# create three new dataframes for the winning parties
+oevp <- ltw_geo_4326 %>% 
+  filter(complete.cases(OeVP_gemeinden))
+
+fpoe <- ltw_geo_4326 %>% 
+  filter(complete.cases(FPOe_gemeinden))
+
+spoe <- ltw_geo_4326 %>% 
+  filter(complete.cases(SPOe_gemeinden))
+
+
+# create palette to display party winning margins
+min_max_werte <- range(ltw_geo$gewinnspanne, na.rm = TRUE)
+oevp_palette <- colorNumeric(palette = "Greys", 
+                              domain=c(min_max_werte[1], min_max_werte[2]))
+fpoe_palette <- colorNumeric(palette = "Blues", 
+                                domain=c(min_max_werte[1], min_max_werte[[2]]))
+spoe_palette <- colorNumeric(palette = "Reds", 
+                              domain=c(min_max_werte[1], min_max_werte[2]))
+```
+
+```{r, eval=TRUE}
+leaflet() %>%
+  setView(lng = 13.5, lat = 47.5, zoom = 8.4) %>%
+  addProviderTiles("CartoDB.Positron") %>%
+  addPolygons(
+    data = oevp,
+    fillColor = ~oevp_palette(oevp$OeVP_gemeinden),
+    stroke = TRUE,
+    smoothFactor = 0.2,
+    fillOpacity = 1,
+    color = "#666",
+    weight = 1,
+    popup = paste("<b><span style='font-weight: bold;'>",
+                  "<div style='text-align: center;'>",
+                  oevp$gemeindename, 
+                  "<div style='text-align: left;'>",
+                  "<br><b>Landtagswahlergebnisse 2023</br> ",
+                  "<br><b>ÖVP:</b> ", 
+                  "<b><span style='font-weight: normal;'>",
+                  format(round(oevp$OeVP, 3), nsmall = 3), 
+                  "%",
+                  "<br><b>SPÖ:</b> ", 
+                  format(round(oevp$SPOe, 3), nsmall = 3), 
+                  "%",
+                  "<br><b>FPÖ:</b> ", 
+                  format(round(oevp$FPOe, 3), nsmall = 3), 
+                  "%",
+                  "<br><b>Die Grünen:</b> ", 
+                  format(round(oevp$Gruene, 3), nsmall = 3), 
+                  "%",
+                  "<br><b>NEOS:</b> ",
+                  format(round(oevp$NEOS, 3), nsmall = 3), 
+                  "%",
+                  "<br><b>KPÖ:</b> ", 
+                  format(round(oevp$KPOe, 3), nsmall = 3), 
+                  "%",
+                  "<br><b>Wir Sind Salzburg:</b> ", 
+                  format(round(oevp$WIRS, 3), nsmall = 3), 
+                  "%",
+                  "<br><b>MFG:</b> ",
+                  format(round(oevp$MFG, 3), nsmall = 3), 
+                  "%"),
+                  highlightOptions = highlightOptions(color = "black", weight = 4,
+                                                      bringToFront = TRUE)
+  ) %>%
+  addPolygons(
+    data = fpoe,
+    fillColor = ~fpoe_palette(fpoe$FPOe_gemeinden),
+    stroke = TRUE,
+    smoothFactor = 0.2,
+    fillOpacity = 1,
+    color = "#666",
+    weight = 1,
+    popup = paste("<b><span style='font-weight: bold;'>",
+                  "<div style='text-align: center;'>",
+                  fpoe$gemeindename, 
+                  "<div style='text-align: left;'>",
+                  "<br><b>Landtagswahlergebnisse 2023</br> ",
+                  "<br><b>ÖVP:</b> ", 
+                  "<b><span style='font-weight: normal;'>",
+                  format(round(fpoe$OeVP, 3), nsmall = 3), 
+                  "%",
+                  "<br><b>SPÖ:</b> ", 
+                  format(round(fpoe$SPOe, 3), nsmall = 3), 
+                  "%",
+                  "<br><b>FPÖ:</b> ", 
+                  format(round(fpoe$FPOe, 3), nsmall = 3), 
+                  "%",
+                  "<br><b>Die Grünen:</b> ", 
+                  format(round(fpoe$Gruene, 3), nsmall = 3), 
+                  "%",
+                  "<br><b>NEOS:</b> ",
+                  format(round(fpoe$NEOS, 3), nsmall = 3), 
+                  "%",
+                  "<br><b>KPÖ:</b> ", 
+                  format(round(fpoe$KPOe, 3), nsmall = 3), 
+                  "%",
+                  "<br><b>Wir Sind Salzburg:</b> ", 
+                  format(round(fpoe$WIRS, 3), nsmall = 3), 
+                  "%",
+                  "<br><b>MFG:</b> ",
+                  format(round(fpoe$MFG, 3), nsmall = 3), 
+                  "%"),
+                  highlightOptions = highlightOptions(color = "black", weight = 4,
+                                                      bringToFront = TRUE)
+  ) %>%
+  addPolygons(
+    data = spoe,
+    fillColor = ~spoe_palette(spoe$SPOe_gemeinden),
+    stroke = TRUE,
+    smoothFactor = 0.2,
+    fillOpacity = 1,
+    color = "#666",
+    weight = 1, 
+    popup = paste("<b><span style='font-weight: bold;'>",
+                  "<div style='text-align: center;'>",
+                  spoe$gemeindename, 
+                  "<div style='text-align: left;'>",
+                  "<br><b>Landtagswahlergebnisse 2023</br> ",
+                  "<br><b>ÖVP:</b> ", 
+                  "<b><span style='font-weight: normal;'>",
+                  format(round(spoe$OeVP, 3), nsmall = 3), 
+                  "%",
+                  "<br><b>SPÖ:</b> ", 
+                  format(round(spoe$SPOe, 3), nsmall = 3), 
+                  "%",
+                  "<br><b>FPÖ:</b> ", 
+                  format(round(spoe$FPOe, 3), nsmall = 3), 
+                  "%",
+                  "<br><b>Die Grünen:</b> ", 
+                  format(round(spoe$Gruene, 3), nsmall = 3), 
+                  "%",
+                  "<br><b>NEOS:</b> ",
+                  format(round(spoe$NEOS, 3), nsmall = 3), 
+                  "%",
+                  "<br><b>KPÖ:</b> ", 
+                  format(round(spoe$KPOe, 3), nsmall = 3), 
+                  "%",
+                  "<br><b>Wir Sind Salzburg:</b> ", 
+                  format(round(spoe$WIRS, 3), nsmall = 3), 
+                  "%",
+                  "<br><b>MFG:</b> ",
+                  format(round(spoe$MFG, 3), nsmall = 3), 
+                  "%"),
+                  highlightOptions = highlightOptions(color = "black", weight = 4,
+                                                      bringToFront = TRUE)
+  ) %>%
+  addLegendNumeric(pal = spoe_palette, values = ~min_max_werte, title = "SPÖ
+                   Gewinspanne (%)",
+                   orientation = 'horizontal', fillOpacity = 1, width = 150,
+                   height = 20, position = 'bottomright', data = spoe) %>%
+  addLegendNumeric(pal = fpoe_palette, values = ~min_max_werte, title = "FPÖ
+                   Gewinspanne (%)",
+                   orientation = 'horizontal', fillOpacity = 1, width = 150,
+                   height = 20, position = 'bottomright', data = fpoe) %>%
+  addLegendNumeric(pal = oevp_palette, values = ~min_max_werte, title = "ÖVP
+                   Gewinspanne (%)",
+                   orientation = 'horizontal', fillOpacity = 1, width = 150,
+                   height = 20, position = 'bottomright', data = oevp)
 ```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
