@@ -55,57 +55,104 @@ Um das Solarpotenzial Salzburgs und die räumliche Verteilung potenzialer Solara
 Wenn eine Solaranlage gebaut wird, müssen Aspekte wie Maximalisierung der Energiegewnninung, Nähe an Stromnetzinfrastruktur, ökologische Folgen und Baugenehmigungen berücksichtigt werden. Anhand davon werden die Kriterienkataloge, die in Tabelle 1 umgerissen wird, in dieser Analyse angewandt. 
 
 <style>
-    table {
+    .default-table {
         border-collapse: collapse;
         width: 100%;
     }
 
-    th, td {
+    .default-table th, .default-table td {
         border: 0.5px solid black;
         padding: 8px;
         text-align: left;
     }
 
-    th:first-child, td:first-child {
+    .default-table th:first-child, .default-table td:first-child {
         border-right: 2px solid black;
     }
 
-    tr:first-child td {
+    .default-table tr:first-child td {
         border-top: 2px solid black;
     }
 
-    tr:nth-child(2) td{
+    .default-table tr:nth-child(2) td{
         border-top: 2px dashed black;
     }
-    tr:nth-child(9) td:first-child {
+    .default-table tr:nth-child(9) td:first-child {
     border-top: 2px dashed black;
     border-bottom: 2px dashed black;
     }
     
-    tr:nth-child(9) td:last-child {
+    .default-table tr:nth-child(9) td:last-child {
     border-top: 2px dashed black;
     border-bottom: 2px dashed black;
     }
-    tr:nth-child(1) td {
+    .default-table tr:nth-child(1) td {
         border-right: none;
         border-right: 0.5px solid black;
     }
-    tr:nth-child(9) td {
+    .default-table tr:nth-child(9) td {
         border-right: none;
         border-right: 0.5px solid black;
     } 
     
-    tr:nth-child(1) td:nth-child(2) {
+    .default-table tr:nth-child(1) td:nth-child(2) {
         border: none; /* Remove borders for the second column in the second row */
     }
-    tr:nth-child(9) td:nth-child(2) {
+    .default-table tr:nth-child(9) td:nth-child(2) {
         border: none; /* Remove borders for the second column in the second row */
+    }
+    
+    .custom-table {
+        border-collapse: initial;
+        width: initial;
+        border: initial; /* Border color for the entire table (light grey) */
+        border-color: initial;
+    }
+
+    .custom-table th, .custom-table td {
+        border: initial;
+        padding: initial;
+        text-align: initial;
+    }
+
+    .custom-table th:first-child, .custom-table td:first-child {
+        border-right: initial;
+    }
+
+    .custom-table tr {
+        border-top: initial;
+        border-bottom: initial;
+    }
+
+    .custom-table tr:nth-child(2) td{
+        border-top: initial;
+    }
+    .custom-table tr:nth-child(9) td:first-child {
+    border-top: initial;
+    border-bottom: initial;
+    }
+    
+    .custom-table tr:nth-child(9) td:last-child {
+    border-top: initial;
+    border-bottom: initial;
+    }
+    .custom-table tr:nth-child(1) td {
+        border-right: initial;
+        border-right: initial;
+    }
+    .custom-table tr:nth-child(9) td {
+        border-right: initial;
+        border-right: initial;
+    }
+    .custom-table tr:last-child td {
+    border-bottom: initial; /* Bottom border for the last row */
     }
     
 </style>
 
 Tabelle 1: Kriterien berücksichtigt für die Standortwahl von PV-Anlagen (Adaptiert von Kereush & Perovych, 2017)
-<table>
+
+<div class="default-table"> <table>
   <thead>
     <tr>
       <th>Kriterien</th>
@@ -167,6 +214,7 @@ Tabelle 1: Kriterien berücksichtigt für die Standortwahl von PV-Anlagen (Adapt
     </tr>
   </tbody>
 </table>
+</div>
 
 
 \nEine Mindestsolareinstrahlung von 1100 kWh/m^2^/Jahr wird vorausgesetzt, weil eine PV-Anlage typischerweise diese Höhe von Solareinstrahlung braucht, um kostendeckend zu sein (Kereush u. Perovych, 2017). In Bezug auf die Hangneigung der Fläche sollte sie unter 15% bleiben, weil die Errichtung von Solaranlagen an Steillagen Probleme bezüglich Erosion, Stabilität des Bodens und hydrologisches System verursachen könnte und ihre Effizienz bei der Absorption der Sonnenstrahlung einschränken kann (Arnette u. Zobel, 2011, Castillo et al., 2016). Im Idealfall würde die Nähe eine Solaranlage an Stromversorgungsleitung mitberücksichtigen werden, aber in Salzburg gibt es keinen detaillierten öffentlich zugänglichen Datensatz dazu. Es ist empfehlenswert, PV-Anlagen in der Nähe von Gebieten mit hohem Strombedarf, wie Städten, Dörfern oder Unternehmen, zu errichten. Dadurch wird die Entfernung, die der Strom zurücklegen muss, minimiert und die damit verbundenen Leitungsverluste und Übertragungskosten reduziert (Arán-Carrión et al., 2008). Straßen sind wesentlich Straßen sind für den Transport der für den Bau von Solaranlagen benötigten Materialien entscheidend und deshalb sollte sich potenzielle Standorte für Solaranlagen in der Nähe von Straßen befinden. Um das NIMBY (engl: not in my backyard, im Sinne von „nicht in meiner Nachbarschaft”) Problem zu vermeiden, muss auch ein gewisser Abstand von Wohngebieten gehalten werden. Was das Bodenbedeckungspotenzial betrifft, so müssen geeignete Flächen frei von Bergen, Wäldern, Gewässern, Gebäuden, Feuchtgebieten und Überschwemmungsgebieten sein und hat vorzugsweise eine niedrige oder mittlere Gras- oder Strauchvegetation (Kereush u. Perovych, 2017). In Salzburg wurde die Errichtung von Solaranlagen im Grünland mit der Photovoltaik-Kennzeichnungsverordnung (LGBl. Nr. 73/2023), die mit 1. November in Kraft getreten ist. Zudem gibt es derzeit Überlegungen in Österreich, Solaranlagen vermehrt auf Ackerland zu errichten. Um dieser möglichen Entwicklung Rechnung zu tragen, wurde Agrarfläche, einschließlich Ackerland, neben Grünland, in die Liste der geeigneten Landabdeckungstypen für Solaranlagen in dieser Studie aufgenommen. Schutzgebiete wurde wegen den Auflagen, die Entwicklung und Ausbau der Infrastruktur aus Umwelt- und Landschaftsschutzgründen verhindern, als ungeeignet eingestuft und Lagen über 1500 m wurden auch von einer eventuellen Kulisse für Solaranlagen aufgrund der erhöhten Kosten für den Transport von Baumateriellen und Instandhaltung herausgenommen (Kereush u. Perovych, 2017). Außerdem dürfen Flächen für Solaranlagen nicht mit Bahnschienen überschneiden.
@@ -598,55 +646,8 @@ Abbildung 2: Übersichtskarte von Salzburger Land
 
 Das Land Sazlburg befindet sich im Westen von Österreich an der Grenze mit Deutschland und besteht aus 6 Bezirke, Sazlburg (Stadt), Flachgau, Tennengau, Pongau, Pinzgau und Lungau (siehe Abb. 2). Insgesamt hat Sazlburg 119 Gemeinden (siehe Tabelle 2).
 
-
 <div align="left">Tabelle 2: Liste der Bezirke und deren Gemeinden</div>
-<style>
- table {
-        border-collapse: collapse;
-        width: 100%;
-        border: 2px solid #ccc; /* Border color for the entire table (light grey) */
-        border-color: #ccc;
-    }
-
-    th, td {
-        border: 2px solid #ccc;
-        padding: 8px;
-        text-align: left;
-    }
-
-    th:first-child, td:first-child {
-        border-right: 2px solid #ccc;
-    }
-
-    tr {
-        border-top: 2px solid #ccc;
-        border-bottom: 2px solid #ccc;
-    }
-
-    tr:nth-child(2) td{
-        border-top: none;
-    }
-    tr:nth-child(9) td:first-child {
-    border-top: none;
-    border-bottom: none;
-    }
-    
-    tr:nth-child(9) td:last-child {
-    border-top: none;
-    border-bottom: none;
-    }
-    tr:nth-child(1) td {
-        border-right: none;
-        border-right: 2px solid #ccc;
-    }
-    tr:nth-child(9) td {
-        border-right: none;
-        border-right: none;
-    }
-    tr:last-child td {
-    border-bottom: 2px solid #ccc; /* Bottom border for the last row */
-    }
-</style>
+<div class="custom-table">
 ```{r, eval = TRUE, echo = FALSE}
 # create a knitr table with a list of counties and their municipalities
 kbl(select(salzburg_stadt_df,c("PB", "NAME")), 
