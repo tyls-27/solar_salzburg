@@ -804,6 +804,7 @@ if ("geometry" %in% names(fl_wid_clean)) {
 
 # extract data for water, roads, train tracks, populated areas, 
 # enterprise areas and solar farms and add a key for these categories
+# key to abbreviations here: https://www.salzburg.gv.at/bauenwohnen_/Documents/Digitale_Flächenwidmungspläne_Schnittstelle.pdf
 
 # populated areas
 fl_wid_bewohnt <- fl_wid_clean %>%
@@ -2506,39 +2507,30 @@ In dieser Studie wurde auch der Einfluss von Bergen analysiert. Im Süden befind
 
 In Hinsicht auf die gesellschaftliche Akzeptanz eines Ausbaus der Solarenergie in Salzburg sollt das Spannungsfeld zwischen Landwirtschaft und erneuerbaren Energien angesprochen werden. Da im Rahmen dieser Studie unter anderem Agrarfläche und Grünland als taugliche Landbedeckungstypen ausgewiesen wurden, sollte die Möglichkeit, Flächen sowohl für die Landwirtschaft als auch für die Solarproduktion zu nutzen, geprüft werden. Wenn diese zwei Faktoren in Einklang gebracht werden, hat die Energiewende eine höhe Chance zu gelingen (Spreer, 2023; Fechner, 2020; Calvin et al., 2023). In Sazlburg wurde die Errichtung von Solaranlagen auf Grünland bewilligt und die Existenz von Agrarvoltaik-Technologie könnte dazu führen, dass LandwirtInnen vermehrt Solaranlagen auf ihren Flächen bauen lassen (Spreer, 2023; Calvin et al., 2023). Wenn die Nutzung der Fläche für beide Ladnwirtscahft und Solarproduktion kombiniert werden kann, dann steigt die Akzeptanz von Solaranlagen auf landwirtschafliche Fläche (Calvin et al., 2023). Daher wird in dieser Studie durch die Einbeziehung von landwirtschaftlichen Flächen und Grünland davon ausgegangen, dass dies die zukünftigen Entwicklungen sein werden.
 
-Ein weiterer Punkt ist die Akzeptanz des Ausbaus von Solaranlagen in der breiteren Gesellschaft. Das größte Solarpotenzial besteht im Norden des Bundeslandes
+Ein weiterer Punkt ist die Akzeptanz des Ausbaus von Solaranlagen in der breiteren Gesellschaft. Im Norden des Bundeslandes besteht das größte Solarpotenzial. Dieser Bereich wird eher von der ÖVP und FPÖ geprägt. In den Gemeinden, in denen die SPO beim Landtagswahl 2023 erreichte, ist das Gebiet der potenziellen Flächen, die sich für Solaranlagen eignen, relativ begrenzt. Die politische Orientierung der Gemeinden stellt eine Herausforderung für den Ausbau der Solarenergie in Salzburg dar. Menschen, die an Selbstwertgefühlen oder individualistischen und hierarchischen Weltanschauungen festhalten, stehen der Klimapolitik und erneuerbaren Energiesystemen weniger positiv gegenüber, wobei sich diese Ansichten in den Positionen der Mitte-Rechts- bis Rechtsaußen-Parteien wie ÖVP und FPÖ widerspiegeln (Dietz et al., 2007; Perlaviciute u. Steg, 2014; Drews u. Van den Bergh, 2016). Im Gegenteil, Klimapolitik und erneuerbare Energiesysteme werden eher von Menschen akzeptiert, die andere Menschen und die Umwelt wertschätzen oder die egalitäre Weltanschauungen sowie linke oder grüne politische Ideologien unterstützen (Drews u. Van den Bergh, 2016). In Salzburg und Österreich setzen sich die Grünen stark für die verstärkte Nutzung erneuerbarer Energien ein (Wenz, 2022), allerdings haben sie in Salzburg weniger Einfluss als die Parteien auf der rechten Seite des politischen Spektrums. Im Großen und Ganzen kann Salzburg als ein ÖVP-FPÖ-Land bezeichnet werden. Obwohl Klimaschutzmaßnahmen bereits auf EU-, österreichischer und Salzburger Regierungsebene verabschiedet wurden, bedarf ihre Umsetzung der Mitwirkung der Bevölkerung (Pao, 2023). Wenn diese eine individualistische Ansicht und eine radikalere Perspektive als die Parteispitzen besitzen, könnte dies die Umsetzung von Maßnahmen, die den Ausbau von Solarenergie einschließen, erschweren.
 
-look at social - do the parties in the north match in favourness of solar energy)
-Feasibility of using land for both agriculture and solar production can increase when both opitions combined (Calvin et al., 2023). AS Grassland and agricultural areas were included - looking forward to 
+## Methodische Kritik
 
-talk about areas, where and what and what impact the urbanness and grassland has
+Während dieser Studie traten zahlreiche Herausforderungen bei der Datenverarbeitung auf. Die hohe Auflösung von 1m x 1m der Daten der jährlichen Solareinstrahlung (solarpot_31258.tif) führte zu langen Verarbeitungszeiten beim Versuch, diese Daten zu klammern und zu maskieren. Daher mussten die Daten auf eine niedrigere Auflösung von 5 m x 5 m neu abgetastet werden, was zu einer Aggregation und damit zu einem Verlust von Details in den Daten führte. Idealerweise wären die Maskierungs- und Verschneidungsoperationen auf dem Datensatz mit einer Auflösung von 1 m x 1 m durchgeführt werden, um das endgültige Gebiet der für Solarparks geeigneten Flächen zu bestimmen.
 
-Flächenwidmungplan use with nod to future - may not reflectcurrent landuses but what is planned
-Compare grassland, residential area and solar maps with each other
+Obwohl die Daten zur Flächenwidmung nicht die aktuelle Landnutzung widerspiegeln, bilden sie die Grundlage für künftige Entwicklungen. Da sich diese Studie auf potenzielle Flächen konzentriert, auf denen in Zukunft Solaranlagen errichtet werden könnten, war es angemessen, diesen Datensatz zu verwenden, auch wenn er nicht die derzeitige reale Flächennutzung widerspiegelt. 
 
-The method used to choose the breaks for the chloropeth maps
+Für die Breaks auf den Nicht-Hotspot-Analyse-Chloropeth-Karten im Abschnitt „Durchführung der Hotspot-Analyse und Räumliche Autokorrelation" wurden verschiedene Methoden verwendet. Die Pretty- und Jenk-Methoden wurden aufgrund der Verteilung der Daten ausgewählt. Die Jenk-Methode wurde gewählt, wenn die Daten so verteilt waren, dass sich die Werte auf einen kleinen Bereich des gesamten Datenbereichs konzentrierten. Dadurch wurden die Unterschiede auf den Karten deutlicher sichtbar. Andernfalls wurde die Pretty-Methode angewendet, wenn die Daten normal verteilt waren und es weniger Ausreißer gab.  
 
-Also limitations with study e.g. resolution of data, landcover, lamd use categories, other things, Fläche fragmentiert - noch eeine Kriteria wäre nützlich? Not the most up to date flächenwidmungsplan - but the only publically available
-Grassland - flatter areas with no mountains
-
-Cluster also shows grassland and higher solar - also talk about urban areas and mountains and linkages between all these
-
-Talk about model results- # critiques - ofc when include these factors in criteria they likely to have effect, but interesting to see what effect and the significance
+Das erstellte lineare Modell war eine erste Erkundung der statistischen Beziehung zwischen den ausgewählten Faktoren. Es hätten noch mehr Faktoren in das Modell aufgenommen werden können, wie z. B. landwirtschaftliche Flächen und Schutzgebiete. Jedoch war das Modell war nur als kurzer Einblick in die statistische Beziehung gedacht, um die Bedeutung von Grünland und Wohngebieten für die Bestimmung der für Solaranlagen geeigneten Fläche pro Gemeinde zu ermitteln. Bei der weiteren Erforschung dieser Frage kann das Modell verfeinert werden.
 
 
-
-
-Social acceptance needs be addressed by renewable energy projects (Pao, 2023)
-
-Talk about the importance of looking at the geographical spread of support as it is those who are directly affected by the building of a solar plant that are going to be most strongly in favour or opposition to it. Die Grünen sind großer Befürwörter der intensiveren Nutzung erneuerbarer Energie (Wenz, 2022). Talk about other parties and egalitarian and individualistic views. Then talk about nedled to take into societal factors - but this for future study - link to social tech trans
-
-Public opposition may result from a culturally valued landscape being affected by adaptation or mitigation options, such as renewable energy development (Warren et al., 2005; Devinewright and Howes, 2010) - something to be considered in the cultural landscape on Austria - dealt with in another study
+Die mit den gewählten Methoden ermittelten potenziellen Gebiete für Solaranlagen führen zu fragmentierten Flächen. Es ist jedoch unwirtschaftlich, isolierte Solaranlagen nur auf diesen Flächen zu errichten, sondern vielmehr solche, die nahe beieinander liegen, miteinander zu verbinden. Es wurde nicht in Rahmen dieser Studie nicht quantitativ berücksichtigt, wie dies wirtschaftlich beeinflusst wird. Dies bietet eine künftige Gelegenheit, dies näher zu betrachten.
 
 # Fazit und Aussicht
 
-roof solar, social issues, looking at future - orientated based on newset Flächenwidmungplan even if areas are currently being used for different purpose
+In Sazlburg besteht das Potenzial, die Energiewende durch den Ausbau von Solarenegie voranzutreiben. 
 
+roof solar, social issues, looking at future 
+Um diese Studie zu komplementieren - look at other ways to support energy transitojn - and social side
 Doesn’t consider roof potential pv and also on train tracks
+
+Social side needs to be explored further - pyschology, how approaches can be made to complement this study and the opportunities identified to get people on board
 
 # Literaturverzeichnis
 
