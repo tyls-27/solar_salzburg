@@ -2524,13 +2524,11 @@ Die mit den gewählten Methoden ermittelten potenziellen Gebiete für Solaranlag
 
 # Fazit und Aussicht
 
-In Sazlburg besteht das Potenzial, die Energiewende durch den Ausbau von Solarenegie voranzutreiben. 
+In Salzburg besteht das Potenzial, die Energiewende durch den Ausbau von Solarenergie voranzutreiben. Momentan gibt es wenig Solaranlagen im Bundesland, was bedeutet, es gibt noch Kapazität und Potential hinsichtlich Solarenergie auszuschöpfen. Derzeit gibt es im Bundesland nur wenige Solaranlagen, was bedeutet, dass noch Kapazitäten und Potenzial hinsichtlich Solarenergie ausgeschöpft werden können. Die meisten Flächen, auf denen neue Solaranlagen gebaut werden könnten, befinden sich hauptsächlich im flachen Norden des Bundeslandes im Flachgau. Außerdem schließen die Merkmale der Gemeinden, die einen höheren Anteil an solaranlagengeeigneten Flächen haben, einen höhen Grünland- und niedrigen Berganteil ein. 
 
-roof solar, social issues, looking at future 
-Um diese Studie zu komplementieren - look at other ways to support energy transitojn - and social side
-Doesn’t consider roof potential pv and also on train tracks
+Um das Potenzial der Solarenergie im Land Salzburg zu verwirklichen, müssen die Gesselschaft mitgenommen werden (Beierle, 1998; Rowe u. Frewer, 2000; Sareen u. Haarstad, 2018; Calvin et al., 2023). Ab 2023 ist die politische und gesellschaftliche Stimmung für den Ausbau von Solarstrom und anderen erneuerbaren Energien im Land ungünstig. Obwohl für Salzburg Gesetze und Strategien zur Förderung erneuerbarer Energien bestehen, um die Energiewende voranzutreiben, ist die gesellschaftliche Akzeptanz dieser klimapolitischen Maßnahmen unklar. Deshalb würde eine detaillierte Studie in dieser Richtung die politische und gesellschaftliche Plausibilität der Realisierung der in dieser Studie skizzierten Solaranlagen untersuchen und ergänzen. 
 
-Social side needs to be explored further - pyschology, how approaches can be made to complement this study and the opportunities identified to get people on board
+Während sich diese Studie mit dem Potenzial von Solaranlagen auf Freiflächen befasst, eröffnen jedoch die Fortschritte in der Solartechnik auch andere Möglichkeiten der Energiegewinnung von der Sonne. Eine Möglichkeit, das Potenzial der Solarenergie zu erhöhen, besteht darin, Solaranlagen neben oder über Bahnschienen zu installieren. Dies kann auch die bereits vorhandenen auf dem Dach montierten Photovoltaikanlagen ergänzen. Eine weitere Untersuchung der gesamten Bandbreite von Solaroptionen im Bundesland Sazlburg würde es ermöglichen, ein vollständiges Bild und den Stand der Solarenergie im Bundesland zu erhalten, um künftige Strategien zur Förderung der Energiewende und zur Verringerung der Anfälligkeit der Gesellschaft gegenüber dem Klimawandel zu unterstützen.
 
 # Literaturverzeichnis
 
