@@ -1,5 +1,5 @@
 ---
-title: "Energiewende in Sazlburg - Potenziale Solaranlagen"
+title: "Energiewende in Salzburg - Potenziale Solaranlagen"
 author: "Timothy Sung"
 date: "`r Sys.Date()`"
 output:
@@ -169,7 +169,7 @@ Tabelle 1: Kriterien berücksichtigt für die Standortwahl von PV-Anlagen (Adapt
 </table>
 
 
-Eine Mindestsolareinstrahlung von 1100 kWh/m^2^/Jahr wird vorausgesetzt, weil eine PV-Anlage typischerweise diese Höhe von Solareinstrahlung braucht, um kostendeckend zu sein (Kereush u. Perovych, 2017). In Bezug auf die Hangneigung der Fläche sollte sie unter 15% bleiben, weil die Errichtung von Solaranlagen an Steillagen Probleme bezüglich Erosion, Stabilität des Bodens und hydrologisches System verursachen könnte und ihre Effizienz bei der Absorption der Sonnenstrahlung einschränken kann (Arnette u. Zobel, 2011, Castillo et al., 2016). Im Idealfall würde die Nähe eine Solaranlage an Stromversorgungsleitung mitberücksichtigen werden, aber in Salzburg gibt es keinen detaillierten öffentlich zugänglichen Datensatz dazu. Es ist empfehlenswert, PV-Anlagen in der Nähe von Gebieten mit hohem Strombedarf, wie Städten, Dörfern oder Unternehmen, zu errichten. Dadurch wird die Entfernung, die der Strom zurücklegen muss, minimiert und die damit verbundenen Leitungsverluste und Übertragungskosten reduziert (Arán-Carrión et al., 2008). Straßen sind wesentlich Straßen sind für den Transport der für den Bau von Solaranlagen benötigten Materialien entscheidend und deshalb sollte sich potenzielle Standorte für Solaranlagen in der Nähe von Straßen befinden. Um das NIMBY (engl: not in my backyard, im Sinne von „nicht in meiner Nachbarschaft”) Problem zu vermeiden, muss auch ein gewisser Abstand von Wohngebieten gehalten werden. Was das Bodenbedeckungspotenzial betrifft, so müssen geeignete Flächen frei von Bergen, Wäldern, Gewässern, Gebäuden, Feuchtgebieten und Überschwemmungsgebieten sein und hat vorzugsweise eine niedrige oder mittlere Gras- oder Strauchvegetation (Kereush u. Perovych, 2017). In Salzburg wurde die Errichtung von Solaranlagen im Grünland mit der Photovoltaik-Kennzeichnungsverordnung (LGBl. Nr. 73/2023), die mit 1. November in Kraft getreten ist. Zudem gibt es derzeit Überlegungen in Österreich, Solaranlagen vermehrt auf Ackerland zu errichten. Um dieser möglichen Entwicklung Rechnung zu tragen, wurde Agrarfläche, einschließlich Ackerland, neben Grünland, in die Liste der geeigneten Landabdeckungstypen für Solaranlagen in dieser Studie aufgenommen. Schutzgebiete wurde wegen den Auflagen, die Entwicklung und Ausbau der Infrastruktur aus Umwelt- und Landschaftsschutzgründen verhindern, als ungeeignet eingestuft und Lagen über 1500 m wurden auch von einer eventuellen Kulisse für Solaranlagen aufgrund der erhöhten Kosten für den Transport von Baumateriellen und Instandhaltung herausgenommen (Kereush u. Perovych, 2017). Außerdem dürfen Flächen für Solaranlagen nicht mit Bahnschienen überschneiden.
+\nEine Mindestsolareinstrahlung von 1100 kWh/m^2^/Jahr wird vorausgesetzt, weil eine PV-Anlage typischerweise diese Höhe von Solareinstrahlung braucht, um kostendeckend zu sein (Kereush u. Perovych, 2017). In Bezug auf die Hangneigung der Fläche sollte sie unter 15% bleiben, weil die Errichtung von Solaranlagen an Steillagen Probleme bezüglich Erosion, Stabilität des Bodens und hydrologisches System verursachen könnte und ihre Effizienz bei der Absorption der Sonnenstrahlung einschränken kann (Arnette u. Zobel, 2011, Castillo et al., 2016). Im Idealfall würde die Nähe eine Solaranlage an Stromversorgungsleitung mitberücksichtigen werden, aber in Salzburg gibt es keinen detaillierten öffentlich zugänglichen Datensatz dazu. Es ist empfehlenswert, PV-Anlagen in der Nähe von Gebieten mit hohem Strombedarf, wie Städten, Dörfern oder Unternehmen, zu errichten. Dadurch wird die Entfernung, die der Strom zurücklegen muss, minimiert und die damit verbundenen Leitungsverluste und Übertragungskosten reduziert (Arán-Carrión et al., 2008). Straßen sind wesentlich Straßen sind für den Transport der für den Bau von Solaranlagen benötigten Materialien entscheidend und deshalb sollte sich potenzielle Standorte für Solaranlagen in der Nähe von Straßen befinden. Um das NIMBY (engl: not in my backyard, im Sinne von „nicht in meiner Nachbarschaft”) Problem zu vermeiden, muss auch ein gewisser Abstand von Wohngebieten gehalten werden. Was das Bodenbedeckungspotenzial betrifft, so müssen geeignete Flächen frei von Bergen, Wäldern, Gewässern, Gebäuden, Feuchtgebieten und Überschwemmungsgebieten sein und hat vorzugsweise eine niedrige oder mittlere Gras- oder Strauchvegetation (Kereush u. Perovych, 2017). In Salzburg wurde die Errichtung von Solaranlagen im Grünland mit der Photovoltaik-Kennzeichnungsverordnung (LGBl. Nr. 73/2023), die mit 1. November in Kraft getreten ist. Zudem gibt es derzeit Überlegungen in Österreich, Solaranlagen vermehrt auf Ackerland zu errichten. Um dieser möglichen Entwicklung Rechnung zu tragen, wurde Agrarfläche, einschließlich Ackerland, neben Grünland, in die Liste der geeigneten Landabdeckungstypen für Solaranlagen in dieser Studie aufgenommen. Schutzgebiete wurde wegen den Auflagen, die Entwicklung und Ausbau der Infrastruktur aus Umwelt- und Landschaftsschutzgründen verhindern, als ungeeignet eingestuft und Lagen über 1500 m wurden auch von einer eventuellen Kulisse für Solaranlagen aufgrund der erhöhten Kosten für den Transport von Baumateriellen und Instandhaltung herausgenommen (Kereush u. Perovych, 2017). Außerdem dürfen Flächen für Solaranlagen nicht mit Bahnschienen überschneiden.
 
 # Methoden, Ergebnisse und Analyse
 
@@ -411,7 +411,7 @@ psg_raw <- st_read("/vsicurl/https://raw.githubusercontent.com/tyls-27/solar_sal
 wsg_raw <- st_read("/vsicurl/https://raw.githubusercontent.com/tyls-27/solar_salzburg/master/Wild_Europaschutzgebiete_VS_RL/Wild_Europaschutzgebiete_VS_RL.shp")
 ```
 
-# Übersichtskarte 
+## Übersichtskarte 
 ```{r, eval=TRUE, results = FALSE}
 #### -------------------------- Map of Salzburg --------------------------- ####
 # add data on districts
@@ -588,7 +588,7 @@ Lungau <- kbl(select(lungau_df,c("PB", "NAME")),
   collapse_rows(columns = 1, valign = "top")
 ```
 
-```{r, eval = TRUE}
+```{r, eval = TRUE, fig.align='center'}
 # print overview map of Salzburg
 sbg_karte
 print(inset_karte, vp = grid::viewport(0.83, 0.15, width = 0.3, height = 0.53))
@@ -599,7 +599,54 @@ Abbildung 2: Übersichtskarte von Salzburger Land
 Das Land Sazlburg befindet sich im Westen von Österreich an der Grenze mit Deutschland und besteht aus 6 Bezirke, Sazlburg (Stadt), Flachgau, Tennengau, Pongau, Pinzgau und Lungau (siehe Abb. 2). Insgesamt hat Sazlburg 119 Gemeinden (siehe Tabelle 2).
 
 
-Tabelle 2: Liste der Bezirke und deren Gemeinden
+<div align="left">Tabelle 2: Liste der Bezirke und deren Gemeinden</div>
+<style>
+ table {
+        border-collapse: collapse;
+        width: 100%;
+        border: 2px solid #ccc; /* Border color for the entire table (light grey) */
+        border-color: #ccc;
+    }
+
+    th, td {
+        border: 2px solid #ccc;
+        padding: 8px;
+        text-align: left;
+    }
+
+    th:first-child, td:first-child {
+        border-right: 2px solid #ccc;
+    }
+
+    tr {
+        border-top: 2px solid #ccc;
+        border-bottom: 2px solid #ccc;
+    }
+
+    tr:nth-child(2) td{
+        border-top: none;
+    }
+    tr:nth-child(9) td:first-child {
+    border-top: none;
+    border-bottom: none;
+    }
+    
+    tr:nth-child(9) td:last-child {
+    border-top: none;
+    border-bottom: none;
+    }
+    tr:nth-child(1) td {
+        border-right: none;
+        border-right: 2px solid #ccc;
+    }
+    tr:nth-child(9) td {
+        border-right: none;
+        border-right: none;
+    }
+    tr:last-child td {
+    border-bottom: 2px solid #ccc; /* Bottom border for the last row */
+    }
+</style>
 ```{r, eval = TRUE, echo = FALSE}
 # create a knitr table with a list of counties and their municipalities
 kbl(select(salzburg_stadt_df,c("PB", "NAME")), 
@@ -643,14 +690,8 @@ kbl(select(flachgau_df,c("PB", "NAME")),
   kable_paper(full_width = F) %>%
   column_spec(1, bold = T) %>%
   collapse_rows(columns = 1, valign = "top") %>%
-   kable_styling(full_width = F, position = "float_left")
-
-kbl(select(flachgau_df,c("PB", "NAME")), 
-              col.names = c("Bezirk", "Gemeinde"), align = "c") %>%
-  kable_paper(full_width = F) %>%
-  column_spec(1, bold = T) %>%
-  collapse_rows(columns = 1, valign = "top") %>%
    kable_styling(full_width = F, position = "left")
+
 ```
 
 
@@ -875,7 +916,7 @@ st_write(bewohnt_buffer, "daten_zwischenablage/bewohnt_buffer.shp", append = F)
 bewohnt_buffer <- st_read("/vsicurl/https://raw.githubusercontent.com/tyls-27/solar_salzburg/master/daten_zwischenablage/bewohnt_buffer.shp")
 ```
 
-### Wohngebiete
+### Wohngebieten
 
 ```{r}
 #### -------------------------- Residential Areas ------------------------- ####
@@ -904,7 +945,7 @@ st_write(wohngebiete_buffer, "daten_zwischenablage/wohngebiete_buffer.shp",
 wohngebiete_buffer <- st_read("/vsicurl/https://raw.githubusercontent.com/tyls-27/solar_salzburg/master/daten_zwischenablage/wohngebiete_buffer.shp")
 ```
 
-### Betriebsgebiete
+### Betriebsgebieten
 
 ```{r}
 #### --------------------- Enterprise/Indsutrial Areas -------------------- ####
@@ -933,7 +974,7 @@ st_write(betriebe_buffer, "daten_zwischenablage/betriebe_buffer.shp",
 betriebe_buffer <- st_read("/vsicurl/https://raw.githubusercontent.com/tyls-27/solar_salzburg/master/daten_zwischenablage/betriebe_buffer.shp")
 ```
 
-### Schutzgebiete
+### Schutzgebieten
 
 ```{r, eval = TRUE}
 #### --------------------------- Protected Areas -------------------------- #### 
@@ -1470,7 +1511,7 @@ pa_comb_4326 <- st_transform(pa_comb, "EPSG: 4326")
 gemeinden_data_4326 <- st_transform(gemeinden_data, "EPSG: 4326")
 bezirk_grenz_4326 <- st_transform(bezirk_grenz, "EPSG: 4326")
 ```
-```{r, eval = TRUE}
+```{r, eval = TRUE, fig.align='center'}
 # create basemap
 basemap <- leaflet() %>% 
   setView(lng = 13, lat = 47.5, zoom = 8.4) %>%
@@ -1637,7 +1678,7 @@ Abbildung 4: Interaktive Leaflet-Karte. Die Verwaltungsgrenzen, bestehende Solar
 
 Mit der interaktiven Karte kann es gesehen werden, wie die potentiziellen Solarflächen in Hinsicht auf die Gemeinden, Schutzgebiete, bewohnte Gebiete und bestehende Solaranlagen verteilt werden (siehe Abb. 4)
 
-### Durchführgun der Hotspot Analyse und Räumliche Autocorrelation
+### Durchführung der Hotspot Analyse und Räumliche Autocorrelation
 
 Die Zentren jeder Gemeinde werden bestimmt und dann wird ein fester maximaler Abstand von 20.000 m zwischen den Zentren jeder Gemeinde verwendet, um Nachbarn zu definieren.  (talk about what method for hotspot analysis and spatial autcorrelation)
 ```{r, eval=TRUE, fig.align='center'}
@@ -2159,7 +2200,7 @@ Abbildung 10: Chloropeth-Karten mit der räumlichen Verteilung der Berggebieten 
 
 Die Berggebiete konzentrieren sich auf die südlichen Randgebiete des Landes (siehe Abb. 10). Im Süden befinden sich die Gemeinden mit dem höchsten Anteil an Berggebieten. Je weiter man nach Norden kommt, desto geringer ist im Allgemeinen der Anteil an Berggebieten pro Gemeinde. 
 
-### Cluster Analyse
+## Cluster Analyse
 
 Eine k-Means Clusteranalyse mit den Merkmalen Bevölkerungsdichte, Anteil der geeigneten Fläche für Solaranlagen, Gründlandanteil, Anteil bewohnter Fläche und Anteil der Berggebiete von jeder Gemeinde erfolgte.   
 ```{r, eval=TRUE}
@@ -2176,7 +2217,7 @@ gemeinden_clus <- gemeinden_data %>%
 ```
 
 Die Ellebogen-Methode wurde angewandt, um die optimale Clusterzahl zu bestimmen. Diese Methode identifiziert den Punkt, ab dem die Verkeleinerung der Gesamtvariation kleiner wird.
-```{r, eval=TRUE}
+```{r, eval=TRUE, fig.align='center'}
 # use elbow method to determine number of clusters
 fviz_nbclust(gemeinden_clus[,2:6], kmeans, method = "wss")
 ```
@@ -2189,7 +2230,7 @@ clusters <- kmeans(gemeinden_clus[,2:6], centers=3, nstart=25)
 clusters
 ```
 
-```{r, eval=TRUE}
+```{r, eval=TRUE, fig.align='center'}
 # visualise clusters graphically - maybe don't need when have map?
 fviz_cluster(clusters, data = gemeinden_clus[,2:6])
 ```
@@ -2215,7 +2256,7 @@ tm_shape(gemeinden_clus) +
   # add legend
   tm_add_legend(col = c("Orange", "darkblue", "grey"), 
                 labels = c("1", "2", "3"),
-                title = "Clusters") +
+                title = "Cluster") +
   # add title
   tm_layout(main.title = "Merkmale der Gemeinden", 
             main.title.fontface = 2,fontfamily = "Arial",main.title.size =
@@ -2456,15 +2497,27 @@ Bei der Landtagswahl 2023 erhielt die ÖVP in den meisten Gemeinden die meisten 
 
 # Diskussion
 
+Im Land Sazlburg gibt es in jeder Gemeinde außer Krimml das Potential für einen weiteren Ausbau der Solarenenergie. Due to the low number of solar farms currently present in Salzburg, solar offers a large growth sector which can support the energy transition, with the identified areas amounting to a 276200% increase in solar farm area in the BundeslandGunag. However, the analysis shows that this potential is spread unevenly across the Bundesland. The vast share of the potential areas are located in the north of the Bundesland. Das sind auch Gegende, die Hot-Spots und eine höhe Konzentration von bewohnten Gebieten und Grünland haben. Obwohl es einige Gemeinde im Süden von Sazlburger Land gibt, die einen relativen Grünlandanteil bestizen (40-60% der Gemeindefläche) sind weniger Fläche für Solaranlagen geeignet als in den nördlichen Gemeinden. Das könnte daran liegen, dass die spärlicher besiedelt sind und einen niedrigeren Anteil an bewohnten Gebieten haben. Obwohl das statistische Modell dies nicht bestätigte, könnte eine höhere Konzentration von Solaranlagen in dicht besiedelten Gebieten besser dazu dienen, die höhere Stromnachfrage in diesen Gebieten zu decken, als in ländlichen Raum, wo weniger Strom verbraucht wird und daher weniger erzeugt werden muss.  Von einer planungstechnischen Perspektive aus betrachtet, ergibt es Sinn, dass sich mehr Solaranlagen in dicht besiedelten Gebieten befinden als andersherum im ländlichen Raum. Dadurch können die Solaranlagen ihre nahegelegenen Wohn-, Geschäfts- und Industriegebiete mit Strom versorgen, ohne dass zu viele neue Infrastrukturen gebaut werden müssen, die durch zahlreiche Gemeinden führen müssen, um den Strom an den EndverbraucherInnen zu liefern. 
+
+Die Beziehungen zwischen einem höheren Anteil an für die Solarenergie geeigneten Flächen, dem Grünlandanteil und den bewohnten Flächen können bei der Clusteranalyse betrachtet werden (siehe Abb. 12). Es scheint, dass der Grünlandanteil bei der Entscheidung, einer Gemeinde einem Cluster zuzuordnen, wichtiger ist, da die Cluster mit einem höheren Solarpotenzial auch einen höheren Grünlandanteil aufweisen, während dies bei der Bevölkerungsdichte und dem Anteil an bewohnten Gebieten nicht der Fall ist. Beim Vergleich der räumlichen Verteilung der Gemeinden in Cluster 2 mit den Hot Spots und den Gemeinden mit einem hohen Anteil von für Solaranlagen geeigneten Flächen in Abbildung 8 zeigt sich ein ähnliches Muster. Die Gemeinden in Cluster 2 sowie diejenigen mit einem höheren Anteil von für Solaranlagen geeigneten Flächen befinden sich im Norden des Bundeslandes.  In Verbindung mit dem Modell werden die Muster deutlicher. Das Modell zeigt auch, dass Grünland einen signifikanten positiven Effekt auf die Fläche geeigneter Solarflächen in einer Gemeinde hat. Es gibt jedoch keine signifikanten Effekte für Wohngebiete und Bevölkerungsdichte, was das Fehlen eines Musters in den Clustern bei disesen Faktoren widerspiegelt. Das bedeutet, dass die erste Hypothese, nämlich dass es in Gemeinden mit einem höheren Anteil an bewohnten Gebieten weniger geeignete Flächen für Solaranlagen gibt, nicht bestätigt werden kann. Für die zweite Hypothese, dass in Gemeinden mit einem höheren Anteil an Grünland mehr Flächen für Solaranlagen zur Verfügung stehen, könnte angenommen werden, dass diese Beziehung existiert.
+
+In dieser Studie wurde auch der Einfluss von Bergen analysiert. Im Süden befinden sich die meisten Gemeinden mit einem hohen Anteil an Bergen. Der Anteil der Bergflächen in einer Gemeinde folgt im Wesentlichen einer Nord-Süd-Achse, wobei es im Norden Gemeinden mit einem niedrigeren Anteil an Bergflächen gibt (siehe Abbildung 10). Gemäß der Clusteranalyse wiesen die Gemeinden mit dem höchsten Anteil an Bergflächen die geringste Bevölkerungsdichte und einen vergleichsweise niedrigen Anteil an Flächen auf, die für Solaranlagen geeignet sind. Abgesehen von dem hohen Anteil an Bergflächen in diesen Gemeinden könnten Gründe für einen niedrigen Anteil an für Solaranlagen geeigneten Flächen sein, dass viele Flächen aufgrund der bergigen Landschaft die Hangneigungvoraussetzung wegen der bergigen Landschaft nicht erfüllten und die Gemeinden relativ abgelegen sind und deshalb weniger Ballungsräume mit bewohnten Gebieten haben, was dem Ausbau von Solaranlagen in diesen Gegenden nach den Kriterien entgegensteht. Der Einfluss des Berganteils einer Gemeinde war signifikant und hatte den größten Einfluss auf den Anteil von Flächen, die für Solarenergie geeignet sind. Aufgrund dieser Erkenntnis könnte es sich lohnen zu prüfen, welche Bergflächen in der Nähe der anderen Voraussetzungen liegen, um mehr Flächen in diesen Gemeinden für Solaranlagen freizuschalten.
+
+In Hinsicht auf die gesellschaftliche Akzeptanz eines Ausbaus der Solarenergie in Salzburg sollt das Spannungsfeld zwischen Landwirtschaft und erneuerbaren Energien angesprochen werden. Da im Rahmen dieser Studie unter anderem Agrarfläche und Grünland als taugliche Landbedeckungstypen ausgewiesen wurden, sollte die Möglichkeit, Flächen sowohl für die Landwirtschaft als auch für die Solarproduktion zu nutzen, geprüft werden. Wenn diese zwei Faktoren in Einklang gebracht werden, hat die Energiewende eine höhe Chance zu gelingen (Spreer, 2023; Fechner, 2020; Calvin et al., 2023). In Sazlburg wurde die Errichtung von Solaranlagen auf Grünland bewilligt und die Existenz von Agrarvoltaik-Technologie könnte dazu führen, dass LandwirtInnen vermehrt Solaranlagen auf ihren Flächen bauen lassen (Spreer, 2023; Calvin et al., 2023). Wenn die Nutzung der Fläche für beide Ladnwirtscahft und Solarproduktion kombiniert werden kann, dann steigt die Akzeptanz von Solaranlagen auf landwirtschafliche Fläche (Calvin et al., 2023). Daher wird in dieser Studie durch die Einbeziehung von landwirtschaftlichen Flächen und Grünland davon ausgegangen, dass dies die zukünftigen Entwicklungen sein werden.
+
+Ein weiterer Punkt ist die Akzeptanz des Ausbaus von Solaranlagen in der breiteren Gesellschaft. Das größte Solarpotenzial besteht im Norden des Bundeslandes
+
+look at social - do the parties in the north match in favourness of solar energy)
+Feasibility of using land for both agriculture and solar production can increase when both opitions combined (Calvin et al., 2023). AS Grassland and agricultural areas were included - looking forward to 
+
 talk about areas, where and what and what impact the urbanness and grassland has
-Also limitations with study e.g. resolution of data, landcover, lamd use categories, other things, Fläche fragmentiert - noch eeine Kriteria wäre nützlich? Not the most up to date flächenwidmungsplan - but the only publically available
 
+Flächenwidmungplan use with nod to future - may not reflectcurrent landuses but what is planned
 Compare grassland, residential area and solar maps with each other
-
-The z-score is a standardised value relating to whether high values or low values are clustering together, which we call the Gi* statistic. (Gi-statistic)
 
 The method used to choose the breaks for the chloropeth maps
 
+Also limitations with study e.g. resolution of data, landcover, lamd use categories, other things, Fläche fragmentiert - noch eeine Kriteria wäre nützlich? Not the most up to date flächenwidmungsplan - but the only publically available
 Grassland - flatter areas with no mountains
 
 Cluster also shows grassland and higher solar - also talk about urban areas and mountains and linkages between all these
@@ -2472,7 +2525,7 @@ Cluster also shows grassland and higher solar - also talk about urban areas and 
 Talk about model results- # critiques - ofc when include these factors in criteria they likely to have effect, but interesting to see what effect and the significance
 
 
-Feasibility of using land for both agriculture and solar production can increase when both opitions combined (Calvin et al., 2023)
+
 
 Social acceptance needs be addressed by renewable energy projects (Pao, 2023)
 
@@ -2488,39 +2541,39 @@ Doesn’t consider roof potential pv and also on train tracks
 
 # Literaturverzeichnis
 
-Alt, F. 2021. Nach Paris: Warum uns die Energiewende zu Gewinnern macht *In*: A. Hildebrandt and W. Landhäußer, eds. *CSR und Digitalisierung* [Online]. Management-Reihe Corporate Social Responsibility. Berlin, Heidelberg: Springer Berlin Heidelberg, pp.477–483. [Zugriff am 5. März 2024]. Verfügbar unter: http://link.springer.com/10.1007/978-3-662-61836-3_33.
+Alt, F. 2021. Nach Paris: Warum uns die Energiewende zu Gewinnern macht *In*: A. Hildebrandt and W. Landhäußer, eds. *CSR und Digitalisierung* [Online]. Management-Reihe Corporate Social Responsibility. Berlin, Heidelberg: Springer Berlin Heidelberg, 477–483. [Zugriff am 5. März 2024]. Verfügbar unter: http://link.springer.com/10.1007/978-3-662-61836-3_33.
 
-Arán Carrión, J., Espín Estrella, A., Aznar Dols, F., Zamorano Toro, M., Rodríguez, M. and Ramos Ridao, A. 2008. Environmental decision-support systems for evaluating the carrying capacity of land areas: Optimal site selection for grid-connected photovoltaic power plants. *Renewable and Sustainable Energy Reviews*. 12(9), pp.2358–2380.
+Arán Carrión, J., Espín Estrella, A., Aznar Dols, F., Zamorano Toro, M., Rodríguez, M. and Ramos Ridao, A. 2008. Environmental decision-support systems for evaluating the carrying capacity of land areas: Optimal site selection for grid-connected photovoltaic power plants. *Renewable and Sustainable Energy Reviews*. 12(9), 2358–2380.
 
-Arnette, A.N. and Zobel, C.W. 2011. Spatial analysis of renewable energy potential in the greater southern Appalachian mountains. *Renewable Energy*. 36(11), pp.2785–2798.
+Arnette, A.N. and Zobel, C.W. 2011. Spatial analysis of renewable energy potential in the greater southern Appalachian mountains. *Renewable Energy*. 36(11), 2785–2798.
 
 Beierle, T.C. 1998. *Public Participation in Environmental Decisions: An Evaluation Framework Using Social Goals* [Online]. Resources for the Future. Verfügbar unter: https://ideas.repec.org/p/ags/rffdps/10497.html.
 
 *Bundesgesetz über den Ausbau von Energie aus erneuerbaren Quellen (Erneuerbaren-Ausbau-Gesetz – EAG), BGBl I 150/2021.* [Online].[Zugriff am 4. März 2024]. Verfügbar unter: https://www.ris.bka.gv.at/Dokumente/BgblAuth/BGBLA_2021_I_150/BGBLA_2021_I_150.html
 
-Bußjäger, P. 2016. Die bundesstaatliche Kompetenzverteilung in Österreich *In*: A. Gamper, P. Bußjäger, F. Karlhofer, G. Pallaver and W. Obwexer, eds. *Föderale Kompetenzverteilung in Europa*. Baden-Baden: Nomos, pp.523–574.
+Bußjäger, P. 2016. Die bundesstaatliche Kompetenzverteilung in Österreich *In*: A. Gamper, P. Bußjäger, F. Karlhofer, G. Pallaver and W. Obwexer, eds. *Föderale Kompetenzverteilung in Europa*. Baden-Baden: Nomos, 523–574.
 
 Calvin, K., Dasgupta, D., Krinner, G., Mukherji, A., Thorne, P.W., Trisos, C., Romero, J., Aldunce, P., Barrett, K., Blanco, G., Cheung, W.W.L., Connors, S., Denton, F., Diongue-Niang, A., Dodman, D., Garschagen, M., Geden, O., Hayward, B., Jones, C., Jotzo, F., Krug, T., Lasco, R., Lee, Y.-Y., Masson-Delmotte, V., Meinshausen, M., Mintenbeck, K., Mokssit, A., Otto, F.E.L., Pathak, M., Pirani, A., Poloczanska, E., Pörtner, H.-O., Revi, A., Roberts, D.C., Roy, J., Ruane, A.C., Skea, J., Shukla, P.R., Slade, R., Slangen, A., Sokona, Y., Sörensson, A.A., Tignor, M., Van Vuuren, D., Wei, Y.-M., Winkler, H., Zhai, P., Zommers, Z., Hourcade, J.-C., Johnson, F.X., Pachauri, S., Simpson, N.P., Singh, C., Thomas, A., Totin, E., Arias, P., Bustamante, M., Elgizouli, I., Flato, G., Howden, M., Méndez-Vallejo, C., Pereira, J.J., Pichs-Madruga, R., Rose, S.K., Saheb, Y., Sánchez Rodríguez, R., Ürge-Vorsatz, D., Xiao, C., Yassaa, N., Alegría, A., Armour, K., Bednar-Friedl, B., Blok, K., Cissé, G., Dentener, F., Eriksen, S., Fischer, E., Garner, G., Guivarch, C., Haasnoot, M., Hansen, G., Hauser, M., Hawkins, E., Hermans, T., Kopp, R., Leprince-Ringuet, N., Lewis, J., Ley, D., Ludden, C., Niamir, L., Nicholls, Z., Some, S., Szopa, S., Trewin, B., Van Der Wijst, K.-I., Winter, G., Witting, M., Birt, A., Ha, M., Romero, J., Kim, J., Haites, E.F., Jung, Y., Stavins, R., Birt, A., Ha, M., Orendain, D.J.A., Ignon, L., Park, S., Park, Y., Reisinger, A., Cammaramo, D., Fischlin, A., Fuglestvedt, J.S., Hansen, G., Ludden, C., Masson-Delmotte, V., Matthews, J.B.R., Mintenbeck, K., Pirani, A., Poloczanska, E., Leprince-Ringuet, N. and Péan, C. 2023. *IPCC, 2023: Climate Change 2023: Synthesis Report. Contribution of Working Groups I, II and III to the Sixth Assessment Report of the Intergovernmental Panel on Climate Change [Core Writing Team, H. Lee and J. Romero (eds.)]. IPCC, Geneva, Switzerland*. [Online] First. Intergovernmental Panel on Climate Change (IPCC). [Zugriff am 7. März 2024]. Verfügbar unter: https://www.ipcc.ch/report/ar6/syr/.
 
-Castillo, C.P., Silva, F.B. e and Lavalle, C. 2016. An assessment of the regional potential for solar power generation in EU-28. Energy Policy. 88, pp.86–99.
-Decker, L.A. 2019. Climate Change Must Be Taken Seriously. *Natural Resources & Environment*. 33(4), pp.54–55.
+Castillo, C.P., Silva, F.B. e and Lavalle, C. 2016. An assessment of the regional potential for solar power generation in EU-28. Energy Policy. 88, 86–99.
+Decker, L.A. 2019. Climate Change Must Be Taken Seriously. *Natural Resources & Environment*. 33(4), 54–55.
 
-Dietz, T., Dan, A. and Shwom, R. 2007. Support for Climate Change Policy: Social Psychological and Social Structural Influences* . *Rural Sociology*. 72(2), pp.185–214.
-Drews, S. and Bergh, J.C.J.M. van den 2016. What explains public support for climate policies? A review of empirical and experimental studies. Climate Policy. 16(7), pp.855–876.
+Dietz, T., Dan, A. and Shwom, R. 2007. Support for Climate Change Policy: Social Psychological and Social Structural Influences* . *Rural Sociology*. 72(2), 185–214.
+Drews, S. and Bergh, J.C.J.M. van den 2016. What explains public support for climate policies? A review of empirical and experimental studies. Climate Policy. 16(7), 855–876.
 
 Fechner, H. 2020. *Ermittlung des Flächenpotentials für den Photovoltaik-Ausbau in Österreich: Welche Flächenkategorien sind für die Erschließung von besonderer Bedeutung, um das Ökostromziel realisieren zu können.*
 
-Geels, F.W., Sovacool, B.K., Schwanen, T. and Sorrell, S. 2017. The Socio-Technical Dynamics of Low-Carbon Transitions. *Joule*. 1(3), pp.463–479.
+Geels, F.W., Sovacool, B.K., Schwanen, T. and Sorrell, S. 2017. The Socio-Technical Dynamics of Low-Carbon Transitions. *Joule*. 1(3), 463–479.
 
-Gingrich, S. 2023. Civil society initiatives W. Winiwarter & V. J. Bruckman, eds. *KIOES Opinions*. (13), pp.19–20.
+Gingrich, S. 2023. Civil society initiatives W. Winiwarter & V. J. Bruckman, eds. *KIOES Opinions*. (13), 19–20.
 
 IPCC 2022. *Global Warming of 1.5°C: IPCC Special Report on Impacts of Global Warming of 1.5°C above Pre-industrial Levels in Context of Strengthening Response to Climate Change, Sustainable Development, and Efforts to Eradicate Poverty* [Online]. Cambridge University Press. [Zugriff am 9. März 2024]. Verfügbar unter: https://www.cambridge.org/core/product/identifier/9781009157940/type/book.
 
 Kerber, F. 2022. *Eine Solarpotentialanalyse der Gebäudedachflächen für die Stromerzeugung aus Photovoltaik für die Regionen Kärnten, Salzburg, Steiermark und Tirol.* Karl-Franzens-Universität Graz.
 
-Kereush, D. and Perovych, I. 2017. Determining Criteria For Optimal Site Selection For Solar Power Plants. *Geomatics, Landmanagement and Landscape*. 4, pp.39–54.
+Kereush, D. and Perovych, I. 2017. Determining Criteria For Optimal Site Selection For Solar Power Plants. *Geomatics, Landmanagement and Landscape*. 4, 39–54.
 
-Kettner, C., Böheim, M., Sommer, M., Gaugl, R., Bachhiesl, U., Gruber, L., Klatzer, T.F., Wogrin, S. and Kratena, K. 2024. Transformation to a renewable electricity system in Austria: Insights from an integrated model analysis. *Renewable Energy*. 223, p.119957.
+Kettner, C., Böheim, M., Sommer, M., Gaugl, R., Bachhiesl, U., Gruber, L., Klatzer, T.F., Wogrin, S. and Kratena, K. 2024. Transformation to a renewable electricity system in Austria: Insights from an integrated model analysis. *Renewable Energy*. 223, 119957.
 
 Kowalski, K. 2010. *Sustainable Energy Transitions in Austria*.[Online] University of Sussex. Verfügbar unter: https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=825690510e98bc022ed338fc991eeec7cf0d0ad0.
 
@@ -2528,23 +2581,23 @@ Land Sazlburg 2024. Klima- und Energiestrategie SALZBURG 2050 - Land Salzburg. [
 
 Land Sazlburg 2021. *Masterplan Klima+Energie 2030 - Bericht Oktober 2021* [Online]. Sazlburg: Land Salzburg. [Zugriff am 4. März 2024]. Verfügbar unter: https://www.salzburg.gv.at/umweltnaturwasser_/Documents/Umwelt/MasterplanKlimaEnergie2030.pdf.
 
-Mierzwiak, M. and Calka, B. 2017. Multi-Criteria Analysis for Solar Farm Location Suitability. *Reports on Geodesy and Geoinformatics*. 104(1), pp.20–32.
+Mierzwiak, M. and Calka, B. 2017. Multi-Criteria Analysis for Solar Farm Location Suitability. *Reports on Geodesy and Geoinformatics*. 104(1), 20–32.
 
-Mokarram, M., Mokarram, M.J., Khosravi, M.R., Saber, A. and Rahideh, A. 2020. Determination of the optimal location for constructing solar photovoltaic farms based on multi-criteria decision system and Dempster–Shafer theory. *Scientific Reports*. 10(1), p.8200
+Mokarram, M., Mokarram, M.J., Khosravi, M.R., Saber, A. and Rahideh, A. 2020. Determination of the optimal location for constructing solar photovoltaic farms based on multi-criteria decision system and Dempster–Shafer theory. *Scientific Reports*. 10(1), 8200
 
-Pao, L.Y. 2023. Potentials and limitation of regenerative power: Hydro, wind, and solar W. Winiwarter & V. J. Bruckman, eds. *KIOES Opinions*. (13), pp.25–27.
+Pao, L.Y. 2023. Potentials and limitation of regenerative power: Hydro, wind, and solar W. Winiwarter & V. J. Bruckman, eds. *KIOES Opinions*. (13), 25–27.
 
-Perlaviciute, G. and Steg, L. 2014. Contextual and psychological factors shaping evaluations and acceptability of energy alternatives: Integrated review and research agenda. *Renewable and Sustainable Energy Reviews*. 35, pp.361–381.
+Perlaviciute, G. and Steg, L. 2014. Contextual and psychological factors shaping evaluations and acceptability of energy alternatives: Integrated review and research agenda. *Renewable and Sustainable Energy Reviews*. 35, 361–381.
 
-Riahi, K. 2023. Energy Transition Pathways W. Winiwarter & V. J. Bruckman, eds. *Energy Transition for a sustainable society*. (13), pp.7–10.
+Riahi, K. 2023. Energy Transition Pathways W. Winiwarter & V. J. Bruckman, eds. *Energy Transition for a sustainable society*. (13), 7–10.
 
 *Richtlinie 2009/28/EG des Europäischen Parlaments und des Rates vom 23. April 2009 zur Förderung der Nutzung von Energie aus erneuerbaren Quellen und zur Änderung und anschließenden Aufhebung der Richtlinien 2001/77/EG und 2003/30/EG*. [Online]. [Zugriff am 4. März 2024]. Verfügbar unter: https://eur-lex.europa.eu/LexUriServ/LexUriServ.do?uri=OJ:L:2009:140:0016:0062:de:PDF
 
-Rowe, G. and Frewer, L.J. 2000. Public Participation Methods: A Framework for Evaluation. *Science, Technology, & Human Values*. 25(1), pp.3–29.
+Rowe, G. and Frewer, L.J. 2000. Public Participation Methods: A Framework for Evaluation. *Science, Technology, & Human Values*. 25(1), 3–29.
 
-Sareen, S. and Haarstad, H. 2018. Bridging socio-technical and justice aspects of sustainable energy transitions. *Applied Energy*. 228, pp.624–632.
+Sareen, S. and Haarstad, H. 2018. Bridging socio-technical and justice aspects of sustainable energy transitions. *Applied Energy*. 228, 624–632.
 
-Schneider, U. 2023. Kapitel 18. Sozialstaat und Klimawandel *In*: C. Görg, V. Madner, A. Muhar, A. Novy, A. Posch, K. W. Steininger and E. Aigner, eds. *APCC Special Report: Strukturen für ein klimafreundliches Leben* [Online]. Berlin, Heidelberg: Springer Berlin Heidelberg, pp.499–528. [Zugriff am 5. März 2024]. Verfügbar unter: https://link.springer.com/10.1007/978-3-662-66497-1_22.
+Schneider, U. 2023. Kapitel 18. Sozialstaat und Klimawandel *In*: C. Görg, V. Madner, A. Muhar, A. Novy, A. Posch, K. W. Steininger and E. Aigner, eds. *APCC Special Report: Strukturen für ein klimafreundliches Leben* [Online]. Berlin, Heidelberg: Springer Berlin Heidelberg, 499–528. [Zugriff am 5. März 2024]. Verfügbar unter: https://link.springer.com/10.1007/978-3-662-66497-1_22.
 
 Spreer, J. 2023. PV-Anlagen bringen Landwirten zehnmal mehr als Ackeranbau. *Der Standard*. [Online]. [Zugriff am 15. März 2024]. Verfügbar unter: https://www.derstandard.de/story/3000000188740/pv-anlagen-bringen-landwirten-zehnmal-mehr-als-ackeranbau.
 
@@ -2552,9 +2605,9 @@ Spreer, J. 2023. PV-Anlagen bringen Landwirten zehnmal mehr als Ackeranbau. *Der
 
 *Verordnung (EU) 2021/1119 des Europäischen Parlaments und des Rates vom 30. Juni 2021 zur Schaffung des Rahmens für die Verwirklichung der Klimaneutralität und zur Änderung der Verordnungen (EG) Nr. 401/2009 und (EU) 2018/1999 („Europäisches Klimagesetz“).* [Online]. [Zugriff am 4. März 2024]. Verfügbar unter: https://eur-lex.europa.eu/legal-content/DE/TXT/PDF/?uri=CELEX:32021R1119&from=FR
 
-Wenz, N. 2022. Energy Governance in Austria *In*: M. Knodt and J. Kemmerzell, eds. *Handbook of Energy Governance in Europe* [Online]. Cham: Springer International Publishing, pp.455–482. [Zugriff am 5. März 2024]. Verfügbar unter: https://link.springer.com/10.1007/978-3-030-43250-8_2.
+Wenz, N. 2022. Energy Governance in Austria *In*: M. Knodt and J. Kemmerzell, eds. *Handbook of Energy Governance in Europe* [Online]. Cham: Springer International Publishing, 455–482. [Zugriff am 5. März 2024]. Verfügbar unter: https://link.springer.com/10.1007/978-3-030-43250-8_2.
 
-Winiwarter, V., Baumgarten, A., Berg, Ch., Blöschl, G., Fürnkranz-Prskawetz, A., Kasper-Giebl, A., Kromb-Kolb, H., Jandl, R., Sturmbauer, Ch., Strauß, J., Striessnig, E. and Zechmeister-Boltenstern, S. 2018. Vermächtnisrisiken in Österreich als Herausforderung für die Umsetzung der Agenda 2030 V. Winiwarter, ed. *KIOES Opinions*. (8), pp.93–98.
+Winiwarter, V., Baumgarten, A., Berg, Ch., Blöschl, G., Fürnkranz-Prskawetz, A., Kasper-Giebl, A., Kromb-Kolb, H., Jandl, R., Sturmbauer, Ch., Strauß, J., Striessnig, E. and Zechmeister-Boltenstern, S. 2018. Vermächtnisrisiken in Österreich als Herausforderung für die Umsetzung der Agenda 2030 V. Winiwarter, ed. *KIOES Opinions*. (8), 93–98.
 
 
 
